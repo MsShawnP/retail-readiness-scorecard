@@ -51,18 +51,16 @@ describe('scoreDimension — edi', () => {
 // ─── Fulfillment ───────────────────────────────────────────────────────────
 
 describe('scoreDimension — fulfillment', () => {
-  it('returns green for walmart with all yes answers', () => {
+  it('returns green for walmart with otif yes', () => {
     const result = scoreDimension('fulfillment', {
       ff_otif_rate: 'yes',
-      ff_label_compliant: 'yes',
     }, 'walmart');
     expect(result.status).toBe('green');
   });
 
-  it('returns green for wholeFoods with all yes answers (lower threshold)', () => {
+  it('returns green for wholeFoods with otif yes (lower threshold)', () => {
     const result = scoreDimension('fulfillment', {
       ff_otif_rate: 'yes',
-      ff_label_compliant: 'yes',
     }, 'wholeFoods');
     expect(result.status).toBe('green');
   });

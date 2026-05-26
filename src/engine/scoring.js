@@ -178,11 +178,10 @@ function scoreFulfillment(answers, retailer) {
     };
   }
 
-  const maxPoints = retailer === 'costco' ? 6 : 5;
+  // ff_label_compliant removed from question bank (covered by edi_label_compliant).
+  // Max points: Costco = 4 (otif 3 + thermal 1), others = 3 (otif only).
+  const maxPoints = retailer === 'costco' ? 4 : 3;
   let earned = a.ff_otif_rate === 'yes' ? 3 : 1;
-
-  earned += a.ff_label_compliant === 'yes' ? 2 : a.ff_label_compliant === 'partial' ? 1 : 0;
-  if (a.ff_label_compliant === 'no') findings.push('Shipping labels non-compliant or SSCC not matching ASN.');
 
   if (retailer === 'costco') {
     earned += a.ff_thermal === 'yes' ? 1 : 0;
