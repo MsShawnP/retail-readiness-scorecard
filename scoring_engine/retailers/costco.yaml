@@ -1,0 +1,204 @@
+retailer: costco
+name: Costco (US Wholesale)
+otif_threshold: "Not publicly disclosed — appointment-window compliance (±30 min of dock appointment)"
+otif_penalty: "Incident-based chargebacks: late/inaccurate ASN $50-$200/incident; label mismatches $50-$150/carton; data discrepancies 1-3% of PO value"
+otif_confidence: "Not found (no published % threshold)"
+fsma_204_required: false
+gdsn_required: true
+portal: "Buyer-driven only. No self-service portal. Contact regional buyer → category evaluation → supplier agreement."
+notes: >
+  Costco EDI specs are documented as notably different from Amazon/Walmart.
+  EDI certification testing with Costco required before go-live.
+  Thermal transfer printing required (direct thermal not accepted).
+  Club-pack must be ready for floor display — no repacking at the club.
+  OTIF scored qualitatively (no published %) — assess on documented delivery history.
+
+dimensions:
+  productData:
+    label: Product Data
+    max_points: 5
+    green_threshold: 70
+    yellow_threshold: 30
+    fix: "Validate all GTINs in GS1 registry; complete trade item hierarchy documentation."
+    questions:
+      - id: pd_gtin_valid
+        text: "Are your GTINs valid and registered in the GS1 registry?"
+        gate: true
+        options:
+          yes: 3
+          partial: 1
+          no: 0
+      - id: pd_hierarchy
+        text: "Is your trade item hierarchy (each/case) documented with Costco's assigned item number?"
+        options:
+          yes: 2
+          partial: 1
+          no: 0
+
+  syndication:
+    label: Syndication
+    max_points: 5
+    green_threshold: 70
+    yellow_threshold: 30
+    fix: "Establish 1WorldSync account; complete GDSN syndication for all launch SKUs."
+    notes: "GDSN required per Costco Basic Supplier Agreement (SEC-filed)."
+    questions:
+      - id: syn_gdsn_active
+        text: "Is your 1WorldSync/GDSN account active and connected to Costco?"
+        gate: true
+        options:
+          yes: 3
+          partial: 1
+          no: 0
+      - id: syn_coverage
+        text: "What percentage of your launch SKUs are fully syndicated to Costco's system?"
+        options:
+          yes: 2
+          partial: 1
+          no: 0
+
+  edi:
+    label: EDI Capability
+    max_points: 7
+    green_threshold: 70
+    yellow_threshold: 30
+    fix: "Implement and certify EDI with Costco (850/855/856/810/820/832/860/997); ensure ASN before physical arrival."
+    required_sets: [850, 855, 856, 810, 820, 832, 860, 997]
+    protocol: "VAN (most common), AS2 (high-volume), or SFTP/FTP. EDI certification testing required before go-live."
+    asn_timing: "Before physical goods arrive at depot. Practitioner guidance: 2-4 hours pre-pickup."
+    notes: >
+      Costco EDI specs differ significantly from Walmart. Having Walmart EDI capability does NOT mean
+      you have Costco EDI capability — Costco's spec requires separate certification testing.
+    questions:
+      - id: edi_asn_capable
+        text: "Can you receive Costco 850 POs and transmit 856 ASNs electronically (Costco-certified)?"
+        gate: true
+        options:
+          yes: 3
+          partial: 1
+          no: 0
+      - id: edi_asn_timing
+        text: "Are your ASNs transmitted before physical goods arrive at the Costco depot?"
+        options:
+          yes: 2
+          partial: 1
+          no: 0
+      - id: edi_label_compliant
+        text: "Are your GS1-128 labels on two adjacent pallet sides with SSCC-18 matching your ASN?"
+        options:
+          yes: 2
+          partial: 1
+          no: 0
+
+  fulfillment:
+    label: Fulfillment
+    max_points: 6
+    green_threshold: 70
+    yellow_threshold: 35
+    fix: "Improve delivery consistency; switch to thermal transfer printing; verify GS1-128 labels."
+    notes: "No published OTIF %; scored on consistent documented delivery history and appointment compliance."
+    questions:
+      - id: ff_otif_rate
+        text: "Do you have consistent on-time delivery history with documented appointment compliance?"
+        gate: true
+        options:
+          yes: 3   # Consistent, documented history
+          partial: 1   # Some history but inconsistent
+          no: 0   # No documented history or known failures — Red gate
+      - id: ff_label_compliant
+        text: "Are your shipping labels GS1-128 on two adjacent pallet sides with accurate SSCC-18?"
+        options:
+          yes: 2
+          partial: 1
+          no: 0
+      - id: ff_thermal
+        text: "Are your labels printed with thermal transfer (not direct thermal)?"
+        costco_only: true
+        notes: "Costco requires thermal transfer printing. Direct thermal labels fade and are rejected at depot."
+        options:
+          yes: 1
+          no: 0
+
+  financial:
+    label: Financial Readiness
+    max_points: 5
+    green_threshold: 70
+    yellow_threshold: 30
+    fix: "Model full year-one cost structure; confirm 90-day cash position including chargeback reserve."
+    questions:
+      - id: fin_cost_modeled
+        text: "Have you modeled year-one Costco costs (slotting equivalent, trade spend, payment terms)?"
+        gate: true
+        options:
+          yes: 3
+          partial: 1
+          no: 0
+      - id: fin_cash_runway
+        text: "Do you have sufficient cash runway for the first 90 days including a chargeback buffer?"
+        options:
+          yes: 2
+          partial: 1
+          no: 0
+
+  production:
+    label: Production Capacity
+    max_points: 5
+    green_threshold: 70
+    yellow_threshold: 30
+    fix: "Confirm co-packer capacity in writing; align production schedule with buyer delivery window."
+    notes: "Club-pack configuration specified by buyer at negotiation — confirm club-pack specs are in production."
+    questions:
+      - id: prod_capacity_confirmed
+        text: "Has your co-packer confirmed capacity for Costco club-pack volume in writing?"
+        gate: true
+        options:
+          yes: 3
+          partial: 1
+          no: 0
+      - id: prod_lead_time
+        text: "Is your production lead time within the buyer's required delivery window?"
+        options:
+          yes: 2
+          partial: 1
+          no: 0
+
+  compliance:
+    label: Compliance
+    max_points: 5
+    green_threshold: 70
+    yellow_threshold: 30
+    fix: "Update FSMA PCQI documentation; verify allergen consistency."
+    questions:
+      - id: comp_fsma_pcqi
+        text: "Is your FSMA PCQI documentation current and on file?"
+        options:
+          yes: 3
+          partial: 1
+          no: 0
+      - id: comp_allergens
+        text: "Are allergen declarations consistent across your label, spec sheet, and GDSN data?"
+        options:
+          yes: 2
+          partial: 1
+          no: 0
+
+  team:
+    label: Team & Process
+    max_points: 5
+    green_threshold: 70
+    yellow_threshold: 30
+    fix: "Assign a named retailer owner; create chargeback dispute process and response SLA."
+    questions:
+      - id: team_owner
+        text: "Is there a named person who owns the day-to-day Costco relationship?"
+        gate: true
+        options:
+          yes: 3
+          partial: 1
+          no: 0
+      - id: team_chargeback_process
+        text: "Do you have a defined process for disputing Costco chargebacks and deductions?"
+        options:
+          yes: 2
+          partial: 1
+          no: 0

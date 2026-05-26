@@ -1,0 +1,216 @@
+retailer: wholeFoods
+name: Whole Foods Market (Amazon)
+otif_threshold: "~97% target (LOW CONFIDENCE — single secondary source; use qualitative framing)"
+otif_confidence: Low
+fsma_204_required: false
+gdsn_required: false  # Not confirmed in public documentation — verify with WFM supplier team
+portal: "Whole Foods Market Supplier Portal. Entry via 'Potential Supplier Form'. CPG brands: LEAP program."
+notes: >
+  Whole Foods Compliance is a hard gate — prohibited ingredients or missing GFSI certification
+  are launch-blocking regardless of all other scores.
+  WFM prohibited ingredients list excludes artificial colors, flavors, and preservatives.
+  GFSI-benchmarked certification preferred: SQF, BRCGS, or equivalent.
+  GDSN requirement NOT confirmed in public documentation — score syndication as direct portal upload,
+  note GDSN as recommended.
+  OTIF scoring uses qualitative framing (do you track OTIF, do you have documented history?)
+  rather than threshold comparison.
+
+dimensions:
+  productData:
+    label: Product Data
+    max_points: 5
+    green_threshold: 70
+    yellow_threshold: 30
+    fix: "Validate all GTINs in GS1 registry; complete trade item hierarchy documentation."
+    questions:
+      - id: pd_gtin_valid
+        text: "Are your GTINs valid and registered in the GS1 registry?"
+        gate: true
+        options:
+          yes: 3
+          partial: 1
+          no: 0
+      - id: pd_hierarchy
+        text: "Is your trade item hierarchy and product specification sheet complete?"
+        options:
+          yes: 2
+          partial: 1
+          no: 0
+
+  syndication:
+    label: Syndication
+    max_points: 5
+    green_threshold: 70
+    yellow_threshold: 30
+    fix: "Establish 1WorldSync account (recommended); complete product data upload to WFM Supplier Portal."
+    notes: "GDSN not confirmed as required for WFM. Score on portal upload capability + GDSN as best practice."
+    questions:
+      - id: syn_gdsn_active
+        text: "Is your product data uploaded to the Whole Foods Supplier Portal (or 1WorldSync)?"
+        gate: true
+        options:
+          yes: 3
+          partial: 1
+          no: 0
+      - id: syn_coverage
+        text: "Is all required product data (attributes, images, specs) complete for launch SKUs?"
+        options:
+          yes: 2
+          partial: 1
+          no: 0
+
+  edi:
+    label: EDI Capability
+    max_points: 7
+    green_threshold: 70
+    yellow_threshold: 30
+    fix: "Implement EDI capability (850/855/810/997); configure ASN; integrate with FoodLogiQ for traceability."
+    required_sets: [850, 855, 810, 997]
+    protocol: "ANSI ASC X12 (primary). UN/EDIFACT and XML also supported. No mandated VAN provider."
+    asn_timing: "Not publicly specified — confirm at onboarding."
+    questions:
+      - id: edi_asn_capable
+        text: "Can you receive 850 POs and transmit ASNs electronically to Whole Foods?"
+        gate: true
+        options:
+          yes: 3
+          partial: 1
+          no: 0
+      - id: edi_asn_timing
+        text: "Can you ensure your ASN is transmitted before physical goods arrive?"
+        options:
+          yes: 2
+          partial: 1
+          no: 0
+      - id: edi_label_compliant
+        text: "Are your GS1-128 shipping labels with SSCC-18 compliant and matching your ASN?"
+        options:
+          yes: 2
+          partial: 1
+          no: 0
+
+  fulfillment:
+    label: Fulfillment
+    max_points: 5
+    green_threshold: 65
+    yellow_threshold: 30
+    fix: "Improve delivery consistency; document on-time delivery history; update label compliance."
+    notes: "Lower green threshold (65) reflects WFM's lower published OTIF target (~97%, low confidence)."
+    questions:
+      - id: ff_otif_rate
+        text: "Do you have a documented on-time delivery history and track OTIF performance?"
+        gate: true
+        options:
+          yes: 3   # Tracks OTIF and has documented history
+          partial: 1   # Some tracking but incomplete
+          no: 0   # No tracking or known failures — Red gate
+      - id: ff_label_compliant
+        text: "Are your shipping labels GS1-128 with accurate SSCC-18?"
+        options:
+          yes: 2
+          partial: 1
+          no: 0
+
+  financial:
+    label: Financial Readiness
+    max_points: 5
+    green_threshold: 70
+    yellow_threshold: 30
+    fix: "Model full year-one cost structure; confirm 90-day cash position."
+    questions:
+      - id: fin_cost_modeled
+        text: "Have you modeled year-one Whole Foods costs (slotting, demos, trade spend, payment terms)?"
+        gate: true
+        options:
+          yes: 3
+          partial: 1
+          no: 0
+      - id: fin_cash_runway
+        text: "Do you have sufficient cash runway for the first 90 days?"
+        options:
+          yes: 2
+          partial: 1
+          no: 0
+
+  production:
+    label: Production Capacity
+    max_points: 5
+    green_threshold: 70
+    yellow_threshold: 30
+    fix: "Confirm co-packer capacity in writing; align production schedule with buyer delivery window."
+    questions:
+      - id: prod_capacity_confirmed
+        text: "Has your co-packer confirmed capacity for projected Whole Foods launch volume in writing?"
+        gate: true
+        options:
+          yes: 3
+          partial: 1
+          no: 0
+      - id: prod_lead_time
+        text: "Is your production lead time within Whole Foods' required delivery window?"
+        options:
+          yes: 2
+          partial: 1
+          no: 0
+
+  compliance:
+    label: Compliance
+    max_points: 8
+    green_threshold: 70
+    yellow_threshold: 30
+    fix: "Pursue GFSI certification (SQF or BRCGS); update FSMA PCQI documentation; verify allergen consistency."
+    notes: >
+      Compliance carries more weight for WFM than Walmart or Costco.
+      Two hard gates: prohibited ingredients and GFSI certification.
+      Prohibited ingredients gate asked FIRST — if yes, entire dimension is Red, all other questions skipped.
+    questions:
+      - id: comp_ingredients
+        text: "Does your product contain artificial colors, flavors, or preservatives?"
+        gate: true
+        hard_gate: true
+        notes: "If yes: hard Red regardless of all other compliance scores."
+        options:
+          yes: 0   # Hard gate Red — product cannot be sold at Whole Foods
+          no: 0    # Gate cleared — 0 pts but continue scoring
+      - id: comp_fsma_pcqi
+        text: "Is your FSMA PCQI documentation current and on file?"
+        options:
+          yes: 3
+          partial: 1
+          no: 0
+      - id: comp_gfsi_cert
+        text: "Do you have a current GFSI-benchmarked certification (SQF, BRCGS, or equivalent)?"
+        gate: true
+        hard_gate: true
+        notes: "Required by Whole Foods. Expired = hard rejection."
+        options:
+          yes: 3
+          partial: 1
+          no: 0  # Hard gate Red
+      - id: comp_allergens
+        text: "Are allergen declarations consistent across your label, spec sheet, and product data?"
+        options:
+          yes: 2
+          partial: 1
+          no: 0
+
+  team:
+    label: Team & Process
+    max_points: 5
+    green_threshold: 70
+    yellow_threshold: 30
+    fix: "Assign a named retailer owner; create chargeback dispute process and response SLA."
+    questions:
+      - id: team_owner
+        text: "Is there a named person who owns the day-to-day Whole Foods relationship?"
+        gate: true
+        options:
+          yes: 3
+          partial: 1
+          no: 0
+      - id: team_chargeback_process
+        text: "Do you have a defined process for disputing deductions and vendor chargebacks?"
+        options:
+          yes: 2
+          partial: 1
+          no: 0

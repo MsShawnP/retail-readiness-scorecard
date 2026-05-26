@@ -1,0 +1,33 @@
+:root {
+  /* Canvas & neutrals */
+  --canvas: #f5f3ee;
+  --text-primary: #333333;
+  --text-secondary: #595959;
+  --gridline: #d9d9d9;
+  --ink: #0d0d0d;
+
+  /* Chicago accent blue */
+  --navy: #1f2e7a;
+  --navy-hover: #141e52;
+  --navy-light: #8e9ad0;
+
+  /* Status colors */
+  --status-red: #cc100a;
+  --status-yellow: #b8860b;
+  --status-green: #158f75;
+
+  /* Dark callout card */
+  --card-dark-bg: #1a1a1a;
+  --card-text: #ffffff;
+  --card-subtitle: #d8d8d8;
+  --card-muted: #9a9a9a;
+  --card-border: rgba(255, 255, 255, 0.12);
+  --card-item-text: #ededed;
+
+  /* Design tokens */
+  --radius: 2px;
+  --serif: 'Playfair Display', Georgia, 'Times New Roman', serif;
+  --sans: 'Source Sans 3', 'Source Sans Pro', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  --content-max: 900px;
+  --section-gap: 60px;
+}

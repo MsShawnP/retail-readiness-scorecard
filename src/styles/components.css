@@ -1,0 +1,425 @@
+/* ─── Buttons ─────────────────────────────────────────────── */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 14px 28px;
+  border-radius: var(--radius);
+  font-family: var(--sans);
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  text-decoration: none;
+  transition: background 150ms ease, border-color 150ms ease, opacity 150ms ease;
+  line-height: 1;
+}
+
+.btn:focus-visible {
+  outline: 2px solid var(--text-primary);
+  outline-offset: 2px;
+}
+
+.btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.btn-primary {
+  background: var(--navy);
+  color: #fff;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: var(--navy-hover);
+}
+
+.btn-secondary {
+  background: transparent;
+  color: var(--navy);
+  border: 1px solid var(--navy);
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: #f0f2fa;
+}
+
+
+/* ─── Option / Retailer cards ─────────────────────────────── */
+
+.option-btn {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 18px 20px;
+  border: 1px solid var(--gridline);
+  border-radius: var(--radius);
+  background: #fff;
+  cursor: pointer;
+  font-family: var(--sans);
+  font-size: 16px;
+  color: var(--text-primary);
+  transition: border-color 150ms ease, border-width 0ms;
+  margin-bottom: 10px;
+  line-height: 1.4;
+}
+
+.option-btn:last-child {
+  margin-bottom: 0;
+}
+
+.option-btn.selected {
+  border-color: var(--navy);
+  border-width: 2px;
+  color: var(--navy);
+  padding: 17px 19px; /* compensate for extra border px */
+}
+
+.option-btn:hover:not(.selected) {
+  border-color: #aaaaaa;
+}
+
+.option-btn:focus-visible {
+  outline: 2px solid var(--text-primary);
+  outline-offset: 2px;
+}
+
+.option-btn__label {
+  font-weight: 600;
+  display: block;
+  margin-bottom: 2px;
+}
+
+.option-btn__desc {
+  font-size: 14px;
+  color: var(--text-secondary);
+  font-weight: 400;
+}
+
+.option-btn.selected .option-btn__desc {
+  color: var(--navy-light);
+}
+
+
+/* ─── Text input ──────────────────────────────────────────── */
+
+.text-input {
+  width: 100%;
+  padding: 14px 16px;
+  border: 1px solid var(--gridline);
+  border-radius: var(--radius);
+  font-family: var(--sans);
+  font-size: 16px;
+  color: var(--text-primary);
+  background: #fff;
+  transition: border-color 150ms ease;
+  max-width: 480px;
+}
+
+.text-input:focus {
+  outline: none;
+  border-color: var(--navy);
+}
+
+.text-input::placeholder {
+  color: #b3b3b3;
+}
+
+.input-hint {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-top: 6px;
+}
+
+
+/* ─── Dark callout card ───────────────────────────────────── */
+
+.callout-card {
+  background: var(--card-dark-bg);
+  border-radius: var(--radius);
+  padding: 32px;
+  color: var(--card-text);
+  margin-bottom: 32px;
+}
+
+.callout-card__label {
+  font-family: var(--sans);
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--card-muted);
+  margin-bottom: 12px;
+}
+
+.callout-card__verdict {
+  font-family: var(--serif);
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--card-text);
+  line-height: 1.2;
+  margin-bottom: 8px;
+}
+
+.callout-card__brand {
+  font-size: 15px;
+  color: var(--card-muted);
+  margin-bottom: 20px;
+}
+
+.callout-card__blockers-heading {
+  font-family: var(--sans);
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--card-muted);
+  margin-bottom: 8px;
+}
+
+.callout-card__blockers {
+  list-style: none;
+}
+
+.callout-card__blocker {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 0;
+  border-top: 1px solid var(--card-border);
+  color: var(--card-item-text);
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.blocker-chip {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-top: 3px;
+}
+
+.blocker-chip.red  { background: var(--status-red); }
+.blocker-chip.yellow { background: var(--status-yellow); }
+.blocker-chip.green  { background: var(--status-green); }
+
+.callout-card__blocker-text strong {
+  font-weight: 600;
+  display: block;
+  color: var(--card-text);
+  font-size: 14px;
+}
+
+.callout-card__timeline {
+  font-size: 15px;
+  color: var(--card-subtitle);
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--card-border);
+}
+
+
+/* ─── Dimension cards ─────────────────────────────────────── */
+
+.dimension-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.dimension-card {
+  background: #fff;
+  border-radius: var(--radius);
+  padding: 20px 20px 20px 24px;
+  border-left: 3px solid var(--gridline);
+  position: relative;
+}
+
+.dimension-card.red    { border-left-color: var(--status-red); }
+.dimension-card.yellow { border-left-color: var(--status-yellow); }
+.dimension-card.green  { border-left-color: var(--status-green); }
+
+.dimension-card__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 10px;
+  gap: 12px;
+}
+
+.dimension-card__name {
+  font-family: var(--sans);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.dimension-card__findings {
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  list-style: none;
+  margin-bottom: 4px;
+}
+
+.dimension-card__findings li {
+  margin-bottom: 4px;
+  padding-left: 14px;
+  position: relative;
+}
+
+.dimension-card__findings li::before {
+  content: "–";
+  position: absolute;
+  left: 0;
+  color: var(--gridline);
+}
+
+.dimension-card__fix {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-top: 10px;
+  font-style: italic;
+}
+
+.dimension-card__link {
+  font-size: 13px;
+  color: var(--navy);
+  text-decoration: none;
+  display: block;
+  margin-top: 8px;
+}
+
+.dimension-card__link:hover {
+  text-decoration: underline;
+}
+
+
+/* ─── Status badge ────────────────────────────────────────── */
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 10px;
+  border-radius: 10px;
+  font-family: var(--sans);
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.status-badge.red    { background: rgba(204,16,10,0.1);    color: var(--status-red); }
+.status-badge.yellow { background: rgba(184,134,11,0.1);   color: var(--status-yellow); }
+.status-badge.green  { background: rgba(21,143,117,0.1);   color: var(--status-green); }
+
+
+/* ─── Screen typography & layout ─────────────────────────── */
+
+.screen-title {
+  font-family: var(--serif);
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--ink);
+  line-height: 1.2;
+  margin-bottom: 12px;
+}
+
+.screen-subtitle {
+  font-size: 17px;
+  color: var(--text-secondary);
+  margin-bottom: 32px;
+  max-width: 560px;
+  line-height: 1.6;
+}
+
+.question-text {
+  font-family: var(--serif);
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.35;
+  color: var(--ink);
+  max-width: 660px;
+  margin-bottom: 28px;
+}
+
+.options-list {
+  list-style: none;
+  max-width: 600px;
+}
+
+.back-link {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: var(--sans);
+  font-size: 14px;
+  color: var(--text-secondary);
+  padding: 0;
+  margin-bottom: 24px;
+  text-align: left;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.back-link:hover {
+  color: var(--text-primary);
+}
+
+.action-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 28px;
+  flex-wrap: wrap;
+}
+
+.section-label {
+  font-family: var(--sans);
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-secondary);
+  margin-bottom: 20px;
+}
+
+
+/* ─── Results screen ──────────────────────────────────────── */
+
+.results-section {
+  margin-top: 40px;
+}
+
+.results-section-title {
+  font-family: var(--serif);
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--ink);
+  margin-bottom: 16px;
+}
+
+.results-chart-wrap {
+  background: #fff;
+  border-radius: var(--radius);
+  padding: 24px;
+  margin-bottom: 8px;
+  overflow-x: auto;
+}
+
+
+/* ─── Mobile ──────────────────────────────────────────────── */
+
+@media (max-width: 640px) {
+  .screen-title       { font-size: 26px; }
+  .question-text      { font-size: 18px; }
+  .callout-card__verdict { font-size: 22px; }
+  .results-section-title { font-size: 18px; }
+  .callout-card       { padding: 24px 20px; }
+}

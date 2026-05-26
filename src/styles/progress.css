@@ -1,0 +1,6 @@
+.progress-indicator {
+  font-family: var(--sans);
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin-bottom: 28px;
+}
