@@ -25,17 +25,27 @@ import {
   renderRetailerSelect,
   renderBrandName,
   renderQuestion,
-  renderResultsStub,
+  renderResults,
 } from './ui/screens.js';
+import { computeScores } from './engine/scoring.js';
 
 // ─── App state ───────────────────────────────────────────────────────────────
 
-/** @type {{ phase: string, retailer: string|null, brandName: string, flowState: object|null }} */
+/**
+ * @type {{
+ *   phase: string,
+ *   retailer: string|null,
+ *   brandName: string,
+ *   flowState: object|null,
+ *   scores: object|null,
+ * }}
+ */
 let appState = {
   phase: 'intro',
   retailer: null,
   brandName: '',
   flowState: null,
+  scores: null,
 };
 
 // ─── Transitions ─────────────────────────────────────────────────────────────
@@ -107,10 +117,17 @@ function render() {
       break;
     }
 
-    case 'results':
-      // U6 will replace renderResultsStub with the full results screen
-      transitionTo(renderResultsStub());
+    case 'results': {
+      // Compute scores lazily (only once)
+      if (!appState.scores) {
+        appState = {
+          ...appState,
+          scores: computeScores(flowState?.answers ?? {}, retailer),
+        };
+      }
+      transitionTo(renderResults(brandName, retailer, appState.scores));
       break;
+    }
   }
 }
 
@@ -192,6 +209,16 @@ function handleClick(e) {
       }, 160);
       break;
     }
+
+    // ── Results actions ──
+    case 'restart':
+      appState = { phase: 'intro', retailer: null, brandName: '', flowState: null, scores: null };
+      render();
+      break;
+
+    case 'export-pdf':
+      // U7 — PDF export; wired in next unit
+      break;
 
     // ── Back navigation ──
     case 'back': {

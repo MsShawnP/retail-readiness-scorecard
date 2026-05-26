@@ -8,6 +8,13 @@
 import { RETAILERS } from '../data/retailers.js';
 import { getQuestionText, getOptionLabel } from '../data/questions.js';
 import { getProgressEstimate } from '../engine/flow.js';
+import {
+  DIMENSIONS,
+  DIMENSION_LABELS,
+  getTopBlockers,
+  getOverallVerdict,
+} from '../engine/scoring.js';
+import { buildBarChart } from './chart.js';
 
 // ─── Utility ────────────────────────────────────────────────────────────────
 
@@ -175,13 +182,146 @@ export function renderQuestion(question, flowState, retailer, brandName) {
   `;
 }
 
-// ─── Results placeholder (U6) ────────────────────────────────────────────────
+// ─── Results screen ──────────────────────────────────────────────────────────
 
-export function renderResultsStub() {
-  return `
-    ${brandMark()}
-    <p class="section-label">Assessment complete</p>
-    <h1 class="screen-title">Calculating your scorecard…</h1>
-    <p class="screen-subtitle">Full results will appear here in the next build.</p>
+const STATUS_LABELS = { red: 'Red', yellow: 'Yellow', green: 'Green' };
+
+/**
+ * @param {string} brandName
+ * @param {string} retailer
+ * @param {Object} scores — map of dimension → { status, numeric, findings, fix, hardGate? }
+ */
+export function renderResults(brandName, retailer, scores) {
+  const retailerLabel = RETAILERS[retailer]?.name ?? retailer;
+  const { verdict, timeline, overallStatus } = getOverallVerdict(scores, retailer);
+  const topBlockers = getTopBlockers(scores);
+
+  // ── Callout card ──────────────────────────────────────────────────────────
+
+  const blockerItems = topBlockers.map(dim => {
+    const s = scores[dim];
+    const label = DIMENSION_LABELS[dim] ?? dim;
+    const finding = s.findings?.[0]
+      ?? (s.status === 'green' ? 'No critical gaps identified.' : 'Review dimension detail below.');
+    return `
+      <li class="callout-card__blocker">
+        <span class="blocker-chip ${s.status}" aria-hidden="true"></span>
+        <div class="callout-card__blocker-text">
+          <strong>${esc(label)}</strong>
+          ${esc(finding)}
+        </div>
+      </li>
+    `;
+  }).join('');
+
+  const calloutCard = `
+    <div class="callout-card" role="region" aria-label="Overall verdict">
+      <p class="callout-card__label">Lailara — Retail Readiness Scorecard</p>
+      <p class="callout-card__verdict">${esc(verdict)}</p>
+      <p class="callout-card__brand">${esc(brandName)} · ${esc(retailerLabel)}</p>
+
+      <p class="callout-card__blockers-heading">Top Priorities</p>
+      <ul class="callout-card__blockers" aria-label="Top priorities">
+        ${blockerItems}
+      </ul>
+
+      <p class="callout-card__timeline">${esc(timeline)}</p>
+    </div>
   `;
+
+  // ── Bar chart ─────────────────────────────────────────────────────────────
+
+  const chartSection = `
+    <div class="results-section">
+      <h2 class="results-section-title">Scorecard by Dimension</h2>
+      <div class="results-chart-wrap">
+        ${buildBarChart(scores)}
+      </div>
+      <p style="font-size: 11px; color: var(--text-secondary); font-style: italic; margin-top: 6px; padding: 0 4px;">
+        Scores weighted by retailer requirement severity.
+        Red &lt;30 · Yellow 30–69 · Green ≥70.
+      </p>
+    </div>
+  `;
+
+  // ── Dimension detail cards ────────────────────────────────────────────────
+
+  // Sort: reds (by weight), then yellows, then greens — same priority as blockers
+  const sortedDimensions = [...DIMENSIONS].sort((a, b) => {
+    const statOrder = { red: 0, yellow: 1, green: 2 };
+    const sa = scores[a]?.status ?? 'green';
+    const sb = scores[b]?.status ?? 'green';
+    if (statOrder[sa] !== statOrder[sb]) return statOrder[sa] - statOrder[sb];
+    // Same status: sort by weight desc
+    const wa = { edi: 5, fulfillment: 5, syndication: 4, productData: 4, financial: 3, compliance: 3, production: 2, team: 2 };
+    return (wa[b] ?? 0) - (wa[a] ?? 0);
+  });
+
+  const dimensionCards = sortedDimensions.map(dim => {
+    const s = scores[dim];
+    const label = DIMENSION_LABELS[dim] ?? dim;
+    const findingItems = (s.findings ?? []).map(f => `<li>${esc(f)}</li>`).join('');
+    const hardGateNote = s.hardGate
+      ? `<p style="font-size:12px;color:var(--status-red);font-weight:600;margin-top:8px;">⚠ Hard gate — no conditional path forward without resolving this.</p>`
+      : '';
+
+    return `
+      <div class="dimension-card ${s.status}" role="article" aria-label="${esc(label)}: ${s.status}">
+        <div class="dimension-card__header">
+          <span class="dimension-card__name">${esc(label)}</span>
+          <span class="status-badge ${s.status}">${STATUS_LABELS[s.status]} · ${s.numeric}%</span>
+        </div>
+        ${findingItems
+          ? `<ul class="dimension-card__findings" aria-label="Findings">${findingItems}</ul>`
+          : `<p style="font-size:14px;color:var(--text-secondary);">No critical gaps identified.</p>`
+        }
+        ${s.fix && (s.findings?.length > 0 || s.status !== 'green')
+          ? `<p class="dimension-card__fix">${esc(s.fix)}</p>`
+          : ''}
+        ${hardGateNote}
+      </div>
+    `;
+  }).join('');
+
+  const detailSection = `
+    <div class="results-section">
+      <h2 class="results-section-title">What to Address</h2>
+      <div class="dimension-grid">
+        ${dimensionCards}
+      </div>
+    </div>
+  `;
+
+  // ── Action row ────────────────────────────────────────────────────────────
+
+  const actions = `
+    <div class="action-row" style="margin-top: 40px; padding-bottom: 40px;">
+      <button class="btn btn-primary" data-action="export-pdf">Export PDF</button>
+      <button class="btn btn-secondary" data-action="restart">Start Over</button>
+    </div>
+  `;
+
+  return `
+    ${brandMark(`${esc(retailerLabel)} Readiness — ${esc(brandName)}`)}
+    <div class="section-label">Assessment complete</div>
+    <h1 class="screen-title">${esc(verdict)}</h1>
+    ${calloutCard}
+    ${chartSection}
+    ${detailSection}
+    ${actions}
+  `;
+}
+
+// Keep the stub export for backwards-compat during transition
+export function renderResultsStub() {
+  return renderResults('Your Brand', 'walmart', {
+    productData: { status: 'yellow', numeric: 57, findings: [], fix: '' },
+    syndication: { status: 'green',  numeric: 80, findings: [], fix: '' },
+    edi:         { status: 'red',    numeric: 0,  findings: ['No EDI capability.'], fix: 'Implement EDI.' },
+    fulfillment: { status: 'yellow', numeric: 33, findings: [], fix: '' },
+    financial:   { status: 'green',  numeric: 100,findings: [], fix: '' },
+    production:  { status: 'green',  numeric: 80, findings: [], fix: '' },
+    compliance:  { status: 'green',  numeric: 100,findings: [], fix: '' },
+    team:        { status: 'red',    numeric: 0,  findings: ['No named owner.'], fix: 'Assign owner.' },
+  });
 }
