@@ -67,12 +67,12 @@ work.
 
 ## 2026-05-26 18:30
 
-**What changed:** Pushed main branch and tagged v1.0 on GitHub
+**Started from:** All 7 units shipped from prior session; main already pushed. Ready to tag and release.
 
-**Why:** All 7 units were shipped and committed last session — this session confirmed clean state and cut the release tag.
+**Did:** Confirmed clean git state, tagged v1.0 at d1f5b39, pushed tag to GitHub. Logged checkpoint.
 
-**State:** v1.0 tagged at d1f5b39. 37/37 tests passing. 395KB gzip. Cross-browser PDF test (Chrome/Safari/Firefox/Edge) still not run — only outstanding item before handing to anyone externally.
+**State:** v1.0 live on GitHub. 37/37 tests passing. 395KB gzip. Cross-browser PDF test (Chrome/Safari/Firefox/Edge) not yet run — only remaining item before external handoff. Minor: intro screen brand mark color may render as text-primary (#333333) instead of spec text-secondary (#595959).
 
-**Next:** Open `dist/retail-readiness-scorecard.html` in each browser, run a Walmart assessment end-to-end, click Export PDF, verify layout and fonts. If clean, arc is fully done.
+**Next:** Open `dist/retail-readiness-scorecard.html` locally in Chrome → run Walmart assessment end-to-end → Export PDF → verify layout and fonts. Repeat in Safari, Firefox, Edge. Fix brand mark color if off. Arc fully done when browsers pass.
 
 ---
