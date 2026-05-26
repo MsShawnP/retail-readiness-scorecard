@@ -64,3 +64,15 @@ work.
 **Next:** Open new session, run `/ce:work` against `docs/plans/2026-05-26-001-feat-retail-readiness-scorecard-plan.md`. Start U1: `npm init`, install Vite + vite-plugin-singlefile + jsPDF + Fontsource packages, configure `vite.config.js`, set up `src/` structure, place fonts in `src/fonts/`, fix `.gitignore` (`!dist/retail-readiness-scorecard.html`), verify `npm run build` produces single offline HTML under 600KB.
 
 ---
+
+## 2026-05-26 18:30
+
+**What changed:** Pushed main branch and tagged v1.0 on GitHub
+
+**Why:** All 7 units were shipped and committed last session — this session confirmed clean state and cut the release tag.
+
+**State:** v1.0 tagged at d1f5b39. 37/37 tests passing. 395KB gzip. Cross-browser PDF test (Chrome/Safari/Firefox/Edge) still not run — only outstanding item before handing to anyone externally.
+
+**Next:** Open `dist/retail-readiness-scorecard.html` in each browser, run a Walmart assessment end-to-end, click Export PDF, verify layout and fonts. If clean, arc is fully done.
+
+---
