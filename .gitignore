@@ -3,8 +3,9 @@ node_modules/
 dist/*
 !dist/retail-readiness-scorecard.html
 
-# Rendered output
+# Rendered output (*.html ignores generated files; negate tracked source files explicitly)
 *.html
+!src/retail-readiness-scorecard.html
 !dist/retail-readiness-scorecard.html
 _freeze/
 _site/
