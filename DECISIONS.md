@@ -19,12 +19,10 @@ Each entry:
 
 ## Architecture & Pipeline
 
-[First arch decision goes here. Example structure:]
-
-### YYYY-MM-DD — [Decision in one line]
-- **Why:** [reasoning, including alternatives considered]
-- **Scope:** [global / file / deliverable / etc.]
-- **Do not:** [anti-instruction, if applicable]
+### 2026-05-26 — Use single-file HTML (Vite + vite-plugin-singlefile) as the build architecture
+- **Why:** The offline-first constraint (must work with no internet connection, no loading spinner) eliminates every server-based option. Streamlit was considered and rejected: zero design control, wrong interaction model for a questionnaire, outputs look like data science demos rather than consulting deliverables. Single-file HTML with all assets inlined is the only approach that satisfies offline + instant load + Lailara design fidelity + professional PDF export.
+- **Scope:** Global — this is the project's foundational architecture.
+- **Do not:** Do not introduce a server, CDN dependency, or external fetch at any point. All CSS, JS, fonts, and libraries must be inlined in the output HTML.
 
 ---
 
@@ -36,13 +34,19 @@ Each entry:
 
 ## Visualization
 
-[Chart conventions, palette decisions, interactivity choices]
+### 2026-05-26 — Use hand-written SVG for the results bar chart, not Chart.js
+- **Why:** Chart.js tree-shaken is ~160KB; combined with jsPDF (~350KB) the file would exceed the 600KB budget. SVG is also the better technical fit: these are static R/Y/G status bars, not interactive data charts — no animation, no tooltip library, no axes needed. SVG renders crisper at any zoom, works natively in jsPDF for PDF export, and keeps the rendering ~5KB vs ~160KB.
+- **Scope:** Results screen chart (`src/ui/results.js` and `src/ui/chart.js`).
+- **Do not:** Do not add Chart.js, D3, or any charting library. The bar chart is intentionally hand-coded SVG.
 
 ---
 
 ## Output Formats
 
-[Decisions about deliverable formats, structure, organization]
+### 2026-05-26 — Use jsPDF v4 programmatic drawing for PDF export, not html2canvas
+- **Why:** html2canvas rasterizes the page — the PDF looks like a screenshot, not a document, and degrades when printed or zoomed. Programmatic jsPDF drawing (doc.rect(), doc.text(), TTF fonts via addFileToVFS) produces crisp vector output that scales cleanly and forwards professionally. html2canvas also adds ~90KB to the bundle. The "CEO forwards this PDF" use case demands vector quality.
+- **Scope:** PDF export module (`src/ui/export.js`).
+- **Do not:** Do not add html2canvas. jsPDF draws all PDF content directly — no DOM capture. TTF fonts (not woff2) must be imported via Vite's `?base64` query and registered with jsPDF's VFS.
 
 ---
 

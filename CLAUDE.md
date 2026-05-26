@@ -2,18 +2,21 @@
 
 ## What this project is
 
-[One paragraph. What it is, who it's for, what done looks like at the
-highest level. Filled in based on the 95% confidence prompt conversation.]
+A single-file HTML diagnostic tool for specialty food brand executives ($3M–$20M revenue) assessing retail launch readiness. The user selects a target retailer (Walmart, Costco, or Whole Foods), answers ~12–18 adaptive questions in a conversational style, and receives a Red/Yellow/Green scorecard across 8 operational dimensions — with a downloadable PDF they can hand to their COO or show in a buyer meeting. Runs fully offline from a local file or hosted URL. No login, no server, no loading spinner.
 
 **Business question this project answers:** For a $3M–$20M specialty food brand, how ready are you for your target retailer launch — and where are the specific gaps that need to be fixed before you say yes to the buyer?
 
 ## Stack and tools
 
-- Primary language: [your language — e.g., JavaScript, Python, Ruby, etc.]
-- Key packages/libraries: [list the main ones you're using]
-- Database: [if applicable — or remove this line]
-- Entry point: [the main file that starts your project — e.g., index.js, app.py, main.rb]
-- Other tools: [anything else relevant — framework, hosting, etc.]
+- Primary language: Vanilla JavaScript (ES modules, no framework)
+- Build: Vite + vite-plugin-singlefile v2.3.0 — inlines all assets into one `.html` file
+- PDF export: jsPDF v4 — programmatic drawing only, no html2canvas
+- Charts: Hand-written SVG (no Chart.js, no D3)
+- Fonts: Fontsource `@fontsource/playfair-display` + `@fontsource/source-sans-3` — woff2 for CSS, TTF for jsPDF via Vite `?base64` import. Fonts MUST live in `src/fonts/` (not `public/`) for inlining to work.
+- Tests: Vitest — unit tests for `src/engine/scoring.js` and `src/engine/flow.js`
+- Scoring artifacts: Python + YAML in `scoring_engine/` — human-readable, auditable, independent of the HTML build
+- Entry point: `src/main.js` → builds to `dist/retail-readiness-scorecard.html`
+- File size target: under 600KB for the output HTML (all assets inlined)
 
 ## Project files
 
@@ -28,11 +31,10 @@ FAILURES.md as relevant.
 
 ## Voice and standards
 
-- [Describe how written output should sound — e.g., "casual and
-  clear", "professional but approachable", "technical and precise"]
-- No marketing voice or consultant filler ("leverage," "synergy,"
-  "best-in-class," "unlock," "drive value")
-- No hedging that softens a real finding
+- Question language: plain, direct, practitioner-fluent. Reference actual retailer thresholds (Walmart's 98% OTIF, not "a high threshold"). Sound like someone who has done this, not like a generic checklist.
+- Results/PDF language: Economist style — sober, declarative, specific. "EDI capability is missing. Without it, Walmart will not process your purchase orders." Not "you may want to consider EDI solutions."
+- No marketing voice or consultant filler ("leverage," "synergy," "best-in-class," "unlock," "drive value")
+- No hedging that softens a real finding. Red means Red.
 
 <!-- OPTIONAL: Data science / reporting projects — uncomment if relevant:
 - Economist style for written deliverables: sober, declarative,
