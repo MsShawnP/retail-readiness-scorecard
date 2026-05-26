@@ -29,20 +29,20 @@ body {
   max-width: var(--content-max);
   margin: 0 auto;
   padding: 48px 24px;
-  display: none;
   flex-direction: column;
-  opacity: 0;
-  transition: opacity 200ms ease-out;
-}
-
-.screen.visible {
   display: flex;
-  opacity: 1;
+  animation: screen-fade-in 220ms ease-out both;
 }
 
-/* Fade timing: JS briefly removes .visible before adding it to trigger transition */
-.screen.fade-out {
-  opacity: 0;
+@keyframes screen-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .screen {
+    animation: none;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
