@@ -55,6 +55,18 @@ Each entry:
 
 ---
 
+### 2026-05-26 — Use CSS @keyframes for screen fade-in, not opacity class toggling
+
+- **Why:** The original approach (`.screen { opacity: 0 }` → `.screen.visible { opacity: 1 }`) failed in the headless preview browser — opacity-0 elements were treated as non-interactive even after `.visible` was applied. `@keyframes screen-fade-in` animation makes elements always rendered at full opacity (animation is purely cosmetic), so they're always clickable and `display: flex` is always active. No JS toggle needed.
+- **Scope:** `src/styles/layout.css` screen transition. All screen mounts use this pattern.
+- **Do not:** Do not revert to opacity class toggling or `display: none` approaches for screen transitions. The @keyframes approach is simpler (no JS state for visibility), more accessible, and works correctly in both headless and real browsers.
+
+### 2026-05-26 — Use window.__rrs_initialized guard to prevent HMR listener duplication
+
+- **Why:** Vite HMR can re-execute `main.js` multiple times during dev reconnection. Each execution adds another click/keydown listener to `#app`, stacking multiple handlers against different `appState` instances. The guard (`if (!window[APP_INIT_KEY])`) ensures listeners and initial render run exactly once. `import.meta.hot.dispose()` resets the flag on module invalidation so a full re-render on the next manual reload is still clean.
+- **Scope:** `src/main.js` boot block.
+- **Do not:** Do not remove the HMR guard or move event listener registration outside it. Any re-execution of the boot block without the guard will stack listeners.
+
 ## Writing & Voice
 
 [Voice, style, terminology decisions specific to this project]

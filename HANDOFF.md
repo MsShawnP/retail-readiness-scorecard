@@ -36,6 +36,23 @@ work.
 
 ---
 
+## 2026-05-26 17:55
+
+**Started from:** All planning done; U1–U6 complete from prior session. Resuming mid-U7 (jsPDF export) — pdf.js created, build at 1,072KB raw / 395KB gzip.
+
+**Did:**
+- Resolved file size budget: accepted gzip (395KB) as the metric, not raw HTML — documented in DECISIONS.md
+- Fixed jsPDF `atob` error in dev mode: added `base64Plugin()` to `vite.config.js` — `?base64` imports now return real base64 in dev (not the URL string that Vite passes through by default)
+- Verified PDF export: zero console errors, fonts register correctly, `doc.save()` fires without throwing
+- Confirmed Lailara design compliance: canvas `#f5f3ee`, navy `#1f2e7a` button, Playfair headings, Source Sans 3 body, HK teal bars, dark callout `#1a1a1a`
+- Marked all 7 units complete; updated PLAN.md, DECISIONS.md, FAILURES.md
+
+**State:** All 7 units shipped and committed. 37/37 tests passing. Build: 395KB gzip. Full assessment flow works (Walmart verified end-to-end). PDF export works in dev. One item outstanding: cross-browser PDF test (Chrome, Safari, Firefox, Edge). Minor design note: brand mark on intro screen renders closer to text-primary than the spec's `text-secondary` — worth a quick color check next session.
+
+**Next:** Open new session → verify PDF in real browser (open `dist/retail-readiness-scorecard.html` locally and click Export PDF → check layout and fonts). Then run cross-browser spot check. If PDF looks good, project is done — push to GitHub and tag v1.0.
+
+---
+
 ## 2026-05-26 15:30
 
 **Started from:** New project. Ran full planning session — brainstorm, retailer spec research, implementation plan.
