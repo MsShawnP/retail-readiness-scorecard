@@ -1,0 +1,38 @@
+{
+  "name": "retail-readiness-scorecard",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MsShawnP/retail-readiness-scorecard.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/MsShawnP/retail-readiness-scorecard/issues"
+  },
+  "homepage": "https://github.com/MsShawnP/retail-readiness-scorecard#readme",
+  "devDependencies": {
+    "vite": "^7.3.3",
+    "vite-plugin-singlefile": "^2.3.0",
+    "vitest": "^4.1.7"
+  },
+  "dependencies": {
+    "@fontsource/playfair-display": "^5.2.8",
+    "@fontsource/source-sans-3": "^5.2.9",
+    "jspdf": "^4.2.1"
+  }
+}
