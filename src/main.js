@@ -28,6 +28,7 @@ import {
   renderResults,
 } from './ui/screens.js';
 import { computeScores } from './engine/scoring.js';
+import { exportPdf } from './ui/pdf.js';
 
 // ─── App state ───────────────────────────────────────────────────────────────
 
@@ -217,7 +218,9 @@ function handleClick(e) {
       break;
 
     case 'export-pdf':
-      // U7 — PDF export; wired in next unit
+      if (appState.scores && appState.retailer) {
+        exportPdf(appState.brandName || 'Your Brand', appState.retailer, appState.scores);
+      }
       break;
 
     // ── Back navigation ──

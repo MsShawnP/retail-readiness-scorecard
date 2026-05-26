@@ -45,8 +45,13 @@ Each entry:
 
 ### 2026-05-26 — Use jsPDF v4 programmatic drawing for PDF export, not html2canvas
 - **Why:** html2canvas rasterizes the page — the PDF looks like a screenshot, not a document, and degrades when printed or zoomed. Programmatic jsPDF drawing (doc.rect(), doc.text(), TTF fonts via addFileToVFS) produces crisp vector output that scales cleanly and forwards professionally. html2canvas also adds ~90KB to the bundle. The "CEO forwards this PDF" use case demands vector quality.
-- **Scope:** PDF export module (`src/ui/export.js`).
+- **Scope:** PDF export module (`src/ui/pdf.js`).
 - **Do not:** Do not add html2canvas. jsPDF draws all PDF content directly — no DOM capture. TTF fonts (not woff2) must be imported via Vite's `?base64` query and registered with jsPDF's VFS.
+
+### 2026-05-26 — Apply the 600KB file size budget to gzip size, not raw HTML size
+- **Why:** jsPDF ES min is 343KB alone; three TTF fonts add ~169KB base64; woff2 CSS fonts add ~73KB base64; app code adds ~40KB. Raw total ~1,072KB but gzip 395KB — well under budget. Single-file HTML is always served over HTTP with Content-Encoding: gzip; the uncompressed size is never what the user downloads. Text-heavy payloads (base64, minified JS) compress at 3–4×. Treating raw size as the metric would force dropping jsPDF (breaking PDF export), dropping fonts (breaking design system), or abandoning the single-file architecture — none of which is acceptable.
+- **Scope:** Build output constraint for the lifetime of this project.
+- **Do not:** Do not use raw uncompressed size as the budget metric. The build target is `gzip < 600KB`. Current: 395KB gzip.
 
 ---
 
