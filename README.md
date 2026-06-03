@@ -2,7 +2,7 @@
 
 A self-contained diagnostic tool for specialty food brand executives evaluating a major retailer launch. Select a target retailer, answer 12–18 adaptive questions, receive a Red / Yellow / Green scorecard across eight operational dimensions, and download a branded PDF. Runs offline from a single HTML file — no login, no server, no internet connection required after download.
 
-**[Try it live →](https://msshawnp.github.io/retail-readiness-scorecard/)**
+**Live:** https://msshawnp.github.io/retail-readiness-scorecard/
 
 ## What it does
 
