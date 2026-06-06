@@ -186,6 +186,17 @@ export function renderQuestion(question, flowState, retailer, brandName) {
 
 const STATUS_LABELS = { red: 'Red', yellow: 'Yellow', green: 'Green' };
 
+const DIMENSION_ENGAGEMENTS = {
+  productData: { name: 'Product Data Health Audit', path: '/work/product-data-health-audit' },
+  syndication: { name: 'Product Data Health Audit', path: '/work/product-data-health-audit' },
+  edi:         { name: 'Retail Readiness & Launch', path: '/work/retail-readiness-launch' },
+  fulfillment: { name: 'Fulfillment & OTIF Diagnostic', path: '/work/fulfillment-otif' },
+  financial:   { name: 'Retail Readiness & Launch', path: '/work/retail-readiness-launch' },
+  production:  { name: 'Fulfillment & OTIF Diagnostic', path: '/work/fulfillment-otif' },
+  compliance:  { name: 'Retail Readiness & Launch', path: '/work/retail-readiness-launch' },
+  team:        { name: 'Trade Spend & Deduction Recovery', path: '/work/trade-spend-deduction-recovery' },
+};
+
 /**
  * @param {string} brandName
  * @param {string} retailer
@@ -292,6 +303,65 @@ export function renderResults(brandName, retailer, scores) {
     </div>
   `;
 
+  // ── Next steps (Red-dimension routing) ─────────────────────────────────
+
+  const redDimensions = DIMENSIONS.filter(d => scores[d]?.status === 'red');
+  const seen = new Set();
+  const dedupedLinks = redDimensions
+    .map(d => ({ dim: d, ...DIMENSION_ENGAGEMENTS[d] }))
+    .filter(item => {
+      if (seen.has(item.path)) return false;
+      seen.add(item.path);
+      return true;
+    });
+
+  let nextStepsSection;
+  if (dedupedLinks.length > 0) {
+    const linkItems = dedupedLinks.map(item => {
+      const dimLabel = DIMENSION_LABELS[item.dim] ?? item.dim;
+      return `
+        <li style="display: flex; align-items: baseline; gap: 8px; padding: 10px 0;
+                    border-bottom: 1px solid var(--border-subtle, #e0e0e0);">
+          <span class="blocker-chip red" aria-hidden="true" style="flex-shrink: 0;"></span>
+          <div>
+            <strong style="color: var(--ink);">${esc(dimLabel)}</strong>
+            <a href="${item.path}" target="_top"
+               style="display: block; font-size: 14px; color: var(--accent, #1f2e7a);
+                      text-decoration: underline; margin-top: 2px;">
+              ${esc(item.name)} &rarr;
+            </a>
+          </div>
+        </li>
+      `;
+    }).join('');
+
+    nextStepsSection = `
+      <div class="results-section" style="margin-top: 32px;">
+        <h2 class="results-section-title">Next Steps</h2>
+        <p style="font-size: 15px; color: var(--text-secondary); margin-bottom: 12px;">
+          Each Red dimension has a scoped engagement that addresses it. These are the ones that matter for your launch.
+        </p>
+        <ul style="list-style: none; padding: 0; margin: 0;">${linkItems}</ul>
+      </div>
+    `;
+  } else {
+    nextStepsSection = `
+      <div class="results-section" style="margin-top: 32px;">
+        <h2 class="results-section-title">Looking Good</h2>
+        <p style="font-size: 15px; color: var(--text-secondary); margin-bottom: 12px;">
+          No Red dimensions — you're ahead of most brands at this stage. If you want a second
+          opinion on the Yellows or help tightening the gaps before the buyer's call:
+        </p>
+        <a href="/contact" target="_top"
+           style="display: inline-block; padding: 8px 20px; background: var(--accent, #1f2e7a);
+                  color: #fff; font-size: 14px; font-weight: 600; text-decoration: none;
+                  border-radius: 2px;">
+          Get in Touch &rarr;
+        </a>
+      </div>
+    `;
+  }
+
   // ── Action row ────────────────────────────────────────────────────────────
 
   const actions = `
@@ -308,6 +378,7 @@ export function renderResults(brandName, retailer, scores) {
     ${calloutCard}
     ${chartSection}
     ${detailSection}
+    ${nextStepsSection}
     ${actions}
   `;
 }

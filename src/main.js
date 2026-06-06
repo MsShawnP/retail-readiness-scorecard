@@ -41,8 +41,10 @@ import { exportPdf } from './ui/pdf.js';
  *   scores: object|null,
  * }}
  */
+const isEmbedded = new URLSearchParams(window.location.search).has('embedded');
+
 let appState = {
-  phase: 'intro',
+  phase: isEmbedded ? 'retailer' : 'intro',
   retailer: null,
   brandName: '',
   flowState: null,

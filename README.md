@@ -25,6 +25,11 @@ Most brands hear "yes" from a buyer and find out six months later that they were
 
 Each dimension scores Red (launch-blocking, < 30%), Yellow (needs work, 30–69%), or Green (ready, ≥ 70%). Retailer-specific thresholds apply — Walmart's Fulfillment threshold is higher than Whole Foods' because the OTIF requirements are stricter.
 
+## Data Contract
+
+**Cinderhaven canonical dataset:** 50 SKUs / 5 production lines / 6 retailers.
+**Scope:** This tool provides a self-assessment scorecard for 3 major retailers (Walmart, Costco, Whole Foods). It intentionally covers a subset of Cinderhaven's 6 contracted retailers. Audits should not flag the 3-retailer scope as data drift.
+
 **Gate questions.** Some answers immediately force a dimension Red regardless of other answers. Whole Foods: a prohibited-ingredient flag or missing GFSI certification locks Compliance to Red. The tool skips follow-up questions in gated dimensions and moves on.
 
 **PDF export.** Branded to the brand's name and retailer. Programmatic vector output — no rasterization. File named `[BrandName]-[Retailer]-Readiness-[MonthYYYY].pdf`.

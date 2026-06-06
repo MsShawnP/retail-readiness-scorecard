@@ -368,6 +368,84 @@ function drawDimensionCard(doc, y, dim, score, pageUsed) {
   return y + estimatedH + 3;
 }
 
+// ─── Dimension → engagement mapping ──────────────────────────────────────────
+
+const DIMENSION_ENGAGEMENTS = {
+  productData: { name: 'Product Data Health Audit', url: 'lailarallc.com/work/product-data-health-audit' },
+  syndication: { name: 'Product Data Health Audit', url: 'lailarallc.com/work/product-data-health-audit' },
+  edi:         { name: 'Retail Readiness & Launch', url: 'lailarallc.com/work/retail-readiness-launch' },
+  fulfillment: { name: 'Fulfillment & OTIF Diagnostic', url: 'lailarallc.com/work/fulfillment-otif' },
+  financial:   { name: 'Retail Readiness & Launch', url: 'lailarallc.com/work/retail-readiness-launch' },
+  production:  { name: 'Fulfillment & OTIF Diagnostic', url: 'lailarallc.com/work/fulfillment-otif' },
+  compliance:  { name: 'Retail Readiness & Launch', url: 'lailarallc.com/work/retail-readiness-launch' },
+  team:        { name: 'Trade Spend & Deduction Recovery', url: 'lailarallc.com/work/trade-spend-deduction-recovery' },
+};
+
+// ─── Section: Next Steps ─────────────────────────────────────────────────────
+
+function drawNextSteps(doc, y, scores, retailerLabel, brandName) {
+  const redDims = DIMENSIONS.filter(d => scores[d]?.status === 'red');
+  const seen = new Set();
+  const dedupedLinks = redDims
+    .map(d => ({ dim: d, ...DIMENSION_ENGAGEMENTS[d] }))
+    .filter(item => {
+      if (seen.has(item.url)) return false;
+      seen.add(item.url);
+      return true;
+    });
+
+  const estimatedH = 20 + Math.max(dedupedLinks.length, 1) * 12 + 20;
+  if (y + estimatedH > PAGE_H - MARGIN_B - 15) {
+    addPage(doc);
+    y = MARGIN_T;
+    sans(doc, 8, 'bold');
+    color(doc, COLOR_NAVY);
+    doc.text('LAILARA', MARGIN_L, y);
+    sans(doc, 8);
+    color(doc, COLOR_TEXT_SEC);
+    doc.text(`${brandName}  ·  ${retailerLabel} Readiness`, MARGIN_L + 12, y);
+    y += 8;
+  }
+
+  serif(doc, 13);
+  color(doc, COLOR_INK);
+  doc.text('Next Steps', MARGIN_L, y);
+  y += 6;
+
+  if (dedupedLinks.length > 0) {
+    sans(doc, 9);
+    color(doc, COLOR_TEXT_SEC);
+    y = wrappedText(doc, 'Each Red dimension has a scoped engagement that addresses it:', MARGIN_L, y, CONTENT_W, 4.5);
+    y += 3;
+
+    dedupedLinks.forEach(item => {
+      const label = DIMENSION_LABELS[item.dim] ?? item.dim;
+      fill(doc, COLOR_RED);
+      doc.circle(MARGIN_L + 2, y - 1.2, 1.5, 'F');
+
+      sans(doc, 9, 'bold');
+      color(doc, COLOR_INK);
+      doc.text(label, MARGIN_L + 7, y);
+
+      sans(doc, 9);
+      color(doc, COLOR_NAVY);
+      doc.text(`${item.name}  ·  ${item.url}`, MARGIN_L + 7, y + 4.5);
+      y += 12;
+    });
+  } else {
+    sans(doc, 9);
+    color(doc, COLOR_TEXT_SEC);
+    y = wrappedText(doc, 'No Red dimensions — ahead of most brands at this stage. Visit lailarallc.com/contact to discuss tightening the remaining gaps.', MARGIN_L, y, CONTENT_W, 4.5);
+  }
+
+  y += 6;
+  sans(doc, 9);
+  color(doc, COLOR_TEXT_SEC);
+  y = wrappedText(doc, 'Questions? Book a 30-minute scoping call at lailarallc.com/contact', MARGIN_L, y, CONTENT_W, 4.5);
+
+  return y;
+}
+
 // ─── Main export function ─────────────────────────────────────────────────────
 
 /**
@@ -438,6 +516,9 @@ export function exportPdf(brandName, retailer, scores) {
       y = newY;
     }
   }
+
+  // Next Steps section
+  y = drawNextSteps(doc, y, scores, retailerLabel, brandName);
 
   // Update page numbers now we know the count
   const finalPageCount = doc.internal.getNumberOfPages();
