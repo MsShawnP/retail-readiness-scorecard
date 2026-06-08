@@ -42,6 +42,7 @@ import { exportPdf } from './ui/pdf.js';
  * }}
  */
 const isEmbedded = new URLSearchParams(window.location.search).has('embedded');
+const gatePdf = isEmbedded && new URLSearchParams(window.location.search).has('gatepdf');
 
 let appState = {
   phase: isEmbedded ? 'retailer' : 'intro',
@@ -221,7 +222,11 @@ function handleClick(e) {
 
     case 'export-pdf':
       if (appState.scores && appState.retailer) {
-        exportPdf(appState.brandName || 'Your Brand', appState.retailer, appState.scores);
+        if (gatePdf) {
+          window.parent.postMessage({ type: 'scorecard-request-pdf' }, '*');
+        } else {
+          exportPdf(appState.brandName || 'Your Brand', appState.retailer, appState.scores);
+        }
       }
       break;
 
@@ -265,6 +270,15 @@ if (!window[APP_INIT_KEY]) {
   document.getElementById('app').addEventListener('click', handleClick);
   document.getElementById('app').addEventListener('keydown', handleKeydown);
   render();
+}
+
+// Listen for parent to unlock PDF export after email gate
+if (gatePdf) {
+  window.addEventListener('message', (event) => {
+    if (event.data?.type === 'scorecard-proceed-pdf' && appState.scores && appState.retailer) {
+      exportPdf(appState.brandName || 'Your Brand', appState.retailer, appState.scores);
+    }
+  });
 }
 
 // HMR: on module update, remove the guard so the next full reload reinitializes cleanly
