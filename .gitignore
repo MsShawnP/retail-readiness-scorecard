@@ -32,6 +32,13 @@ venv/
 # *.sqlite
 # data/raw/
 
+# Security - secret leak prevention
+.env.*
+*.pem
+*.key
+credentials.*
+secrets.*
+
 # OS
 .DS_Store
 Thumbs.db
