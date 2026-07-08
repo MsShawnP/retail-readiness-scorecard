@@ -38,15 +38,27 @@ const COLOR_NAVY       = [31,  46,  122];
 const COLOR_CANVAS     = [245, 243, 238];
 const COLOR_GRIDLINE   = [217, 217, 217];
 const COLOR_TEXT_SEC   = [89,  89,  89];
-const COLOR_RED        = [204, 16,  10];
-const COLOR_YELLOW     = [184, 134, 11];
+const COLOR_RED        = [204, 16,  10];  // Red-42 — ink only (text, 1px rules)
+const COLOR_YELLOW     = [168, 131, 18];  // New York-35 amber — ink (not darkgoldenrod)
 const COLOR_GREEN      = [21,  143, 117];
 const COLOR_DARK_BG    = [26,  26,  26];
 const COLOR_WHITE      = [255, 255, 255];
 
+// Data/bar fills — brand red is never a fill (Lailara design system).
+const COLOR_RED_FILL    = [142, 11,  7];   // Red-20
+const COLOR_YELLOW_FILL = [212, 165, 24];  // New York-45 (amber)
+
+// Ink map — status carried in text, badges, and 1px rules.
 const STATUS_COLORS = {
   red:    COLOR_RED,
   yellow: COLOR_YELLOW,
+  green:  COLOR_GREEN,
+};
+
+// Fill map — status carried in bar fills.
+const STATUS_FILL = {
+  red:    COLOR_RED_FILL,
+  yellow: COLOR_YELLOW_FILL,
   green:  COLOR_GREEN,
 };
 
@@ -254,12 +266,12 @@ function drawBarChart(doc, y, scores) {
     });
 
     // Track
-    fill(doc, [240, 240, 235]);
+    fill(doc, [242, 242, 242]); // London-95
     rect(doc, BAR_X, barY, BAR_MAX, BAR_H, 'F');
 
     // Fill
     if (barW > 0) {
-      fill(doc, STATUS_COLORS[s.status] ?? COLOR_RED);
+      fill(doc, STATUS_FILL[s.status] ?? COLOR_RED_FILL);
       rect(doc, BAR_X, barY, barW, BAR_H, 'F');
     }
 
@@ -277,7 +289,7 @@ function drawBarChart(doc, y, scores) {
   // Chart footnote
   sans(doc, 7);
   color(doc, COLOR_TEXT_SEC);
-  doc.text('Red <30 · Yellow 30–69 · Green ≥70. Scores weighted by retailer requirement severity.', MARGIN_L, y);
+  doc.text('Red <30 · Yellow 30–69 · Green ≥70. Fulfillment thresholds vary by retailer. Scores weighted by retailer requirement severity.', MARGIN_L, y);
   y += 7;
 
   return y;
@@ -318,7 +330,7 @@ function drawDimensionCard(doc, y, dim, score, pageUsed) {
   rect(doc, MARGIN_L + BORDER_W, y, CONTENT_W - BORDER_W, estimatedH, 'F');
 
   // Light card stroke
-  stroke(doc, [240, 240, 235]);
+  stroke(doc, [242, 242, 242]); // London-95
   doc.setLineWidth(0.2);
   doc.rect(MARGIN_L + BORDER_W, y, CONTENT_W - BORDER_W, estimatedH, 'S');
 

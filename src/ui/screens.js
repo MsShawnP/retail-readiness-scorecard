@@ -250,7 +250,7 @@ export function renderResults(brandName, retailer, scores) {
       </div>
       <p style="font-size: 11px; color: var(--text-secondary); font-style: italic; margin-top: 6px; padding: 0 4px;">
         Scores weighted by retailer requirement severity.
-        Red &lt;30 · Yellow 30–69 · Green ≥70.
+        Red &lt;30 · Yellow 30–69 · Green ≥70. Fulfillment thresholds vary by retailer.
       </p>
     </div>
   `;

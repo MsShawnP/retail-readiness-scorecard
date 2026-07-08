@@ -43,7 +43,7 @@
 }
 
 .btn-secondary:hover:not(:disabled) {
-  background: #f0f2fa;
+  background: #e8eaf4; /* Chicago-95 */
 }
 
 
@@ -78,7 +78,7 @@
 }
 
 .option-btn:hover:not(.selected) {
-  border-color: #aaaaaa;
+  border-color: #b3b3b3; /* London-70 */
 }
 
 .option-btn:focus-visible {
@@ -315,7 +315,7 @@
 }
 
 .status-badge.red    { background: rgba(204,16,10,0.1);    color: var(--status-red); }
-.status-badge.yellow { background: rgba(184,134,11,0.1);   color: var(--status-yellow); }
+.status-badge.yellow { background: rgba(168,131,18,0.1);   color: var(--status-yellow); }
 .status-badge.green  { background: rgba(21,143,117,0.1);   color: var(--status-green); }
 
 

@@ -6,10 +6,20 @@
 
 import { DIMENSIONS, DIMENSION_LABELS, DIMENSION_WEIGHTS } from '../engine/scoring.js';
 
-const STATUS_COLORS = {
-  red:    '#cc100a',
-  yellow: '#b8860b',
-  green:  '#158f75',
+// Bar fills use graded data colors. Brand red #cc100a is ink-only, never a bar
+// fill (Lailara design system), so red bars use Red-20 and yellow uses New York
+// amber — not darkgoldenrod.
+const BAR_FILL = {
+  red:    '#8e0b07',  // Red-20
+  yellow: '#d4a518',  // New York-45 (amber)
+  green:  '#158f75',  // Hong Kong-35
+};
+
+// Status is carried in the percentage label ink (higher-contrast steps).
+const STATUS_INK = {
+  red:    '#cc100a',  // Red-42 (brand ink)
+  yellow: '#a88312',  // New York-35 (dark gold)
+  green:  '#158f75',  // Hong Kong-35
 };
 
 const LABEL_COL_W = 178;  // px — dimension label area
@@ -31,7 +41,8 @@ export function buildBarChart(scores) {
     const score = scores[dim] ?? { status: 'red', numeric: 0 };
     const y = i * ROW_H + 4;
     const barW = Math.round((score.numeric / 100) * BAR_MAX_W);
-    const color = STATUS_COLORS[score.status] ?? STATUS_COLORS.red;
+    const fillColor = BAR_FILL[score.status] ?? BAR_FILL.red;
+    const inkColor  = STATUS_INK[score.status] ?? STATUS_INK.red;
     const label = DIMENSION_LABELS[dim] ?? dim;
     const pct = `${score.numeric}%`;
 
@@ -49,16 +60,16 @@ export function buildBarChart(scores) {
 
         <!-- Bar track -->
         <rect x="${BAR_START}" y="${barY}" width="${BAR_MAX_W}" height="${BAR_H}"
-              rx="1" fill="#f0f0eb" />
+              rx="1" fill="#f2f2f2" />
 
         <!-- Bar fill -->
         ${barW > 0 ? `<rect x="${BAR_START}" y="${barY}" width="${barW}" height="${BAR_H}"
-              rx="1" fill="${color}" />` : ''}
+              rx="1" fill="${fillColor}" />` : ''}
 
         <!-- Percentage -->
         <text x="${PCT_COL_X}" y="${textY}" text-anchor="start"
               font-family="'Source Sans 3', 'Source Sans Pro', Helvetica, Arial, sans-serif"
-              font-size="12" fill="${color}" font-weight="600"
+              font-size="12" fill="${inkColor}" font-weight="600"
               dominant-baseline="middle">${escSvg(pct)}</text>
       </g>
     `;
