@@ -92,11 +92,11 @@ dimensions:
 
   fulfillment:
     label: Fulfillment
-    max_points: 6
+    max_points: 4
     green_threshold: 70
     yellow_threshold: 35
     fix: "Improve delivery consistency; switch to thermal transfer printing; verify GS1-128 labels."
-    notes: "No published OTIF %; scored on consistent documented delivery history and appointment compliance."
+    notes: "No published OTIF %; scored on consistent documented delivery history and appointment compliance. Label compliance is scored under EDI (edi_label_compliant)."
     questions:
       - id: ff_otif_rate
         text: "Do you have consistent on-time delivery history with documented appointment compliance?"
@@ -105,12 +105,6 @@ dimensions:
           yes: 3   # Consistent, documented history
           partial: 1   # Some history but inconsistent
           no: 0   # No documented history or known failures — Red gate
-      - id: ff_label_compliant
-        text: "Are your shipping labels GS1-128 on two adjacent pallet sides with accurate SSCC-18?"
-        options:
-          yes: 2
-          partial: 1
-          no: 0
       - id: ff_thermal
         text: "Are your labels printed with thermal transfer (not direct thermal)?"
         costco_only: true

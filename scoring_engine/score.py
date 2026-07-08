@@ -14,6 +14,7 @@ Retailer IDs: walmart | costco | wholeFoods
 
 import argparse
 import json
+import math
 import sys
 from pathlib import Path
 
@@ -56,6 +57,17 @@ FULFILLMENT_THRESHOLDS = {
 
 # ─── Helpers ──────────────────────────────────────────────────────────────────
 
+def js_round(x):
+    """Round half up, matching JavaScript's Math.round (round-half-toward-+inf).
+
+    Python's built-in round() uses banker's rounding (round-half-to-even), so
+    round(62.5)=62 while Math.round(62.5)=63. Percentages here are always
+    non-negative, so floor(x + 0.5) reproduces Math.round exactly and keeps
+    output identical to scoring.js.
+    """
+    return math.floor(x + 0.5)
+
+
 def to_status(numeric, green=70, yellow=30):
     if numeric >= green:
         return 'green'
@@ -64,10 +76,19 @@ def to_status(numeric, green=70, yellow=30):
     return 'red'
 
 
-def pts(answers, key):
-    """Return point value for an answer: yes=3, partial=1, no=0."""
+def graded(answers, key, yes_pts):
+    """Graded points for an answer, mirroring scoring.js: yes=yes_pts, partial=1, no=0.
+
+    scoring.js caps most sub-questions at yes=2 (a few primary/gate questions at
+    yes=3). Passing the correct yes_pts per question keeps Python output identical
+    to the JavaScript engine.
+    """
     v = answers.get(key)
-    return 3 if v == 'yes' else 1 if v == 'partial' else 0
+    if v == 'yes':
+        return yes_pts
+    if v == 'partial':
+        return 1
+    return 0
 
 
 # ─── Dimension scorers ─────────────────────────────────────────────────────────
@@ -81,17 +102,17 @@ def score_product_data(answers, retailer):
                 'findings': ['GTINs not valid or not in GS1 registry — item setup cannot proceed.'],
                 'fix': 'Validate all GTINs in GS1 registry; complete trade item hierarchy documentation.'}
 
-    earned = pts(answers, 'pd_gtin_valid')
-    earned += pts(answers, 'pd_hierarchy') if answers.get('pd_hierarchy') in ('yes','partial') else 0
+    earned = graded(answers, 'pd_gtin_valid', 3)
+    earned += graded(answers, 'pd_hierarchy', 2)
     if answers.get('pd_hierarchy') == 'no':
         findings.append('Trade item hierarchy (each/inner/case) not documented.')
 
     if retailer == 'walmart':
-        earned += pts(answers, 'pd_item360') if answers.get('pd_item360') in ('yes','partial') else 0
+        earned += graded(answers, 'pd_item360', 2)
         if answers.get('pd_item360') == 'no':
             findings.append('Item 360 / GDSN attributes incomplete — Walmart item setup will be rejected.')
 
-    numeric = round((earned / max_pts) * 100)
+    numeric = js_round((earned / max_pts) * 100)
     return {'status': to_status(numeric), 'numeric': numeric, 'findings': findings,
             'fix': 'Validate all GTINs in GS1 registry; complete trade item hierarchy documentation.'}
 
@@ -104,11 +125,11 @@ def score_syndication(answers, retailer):
                 'fix': 'Establish 1WorldSync account; complete GDSN syndication for all launch SKUs.'}
 
     earned = 3 if answers.get('syn_gdsn_active') == 'yes' else 1
-    earned += pts(answers, 'syn_coverage') if answers.get('syn_coverage') in ('yes','partial') else 0
+    earned += graded(answers, 'syn_coverage', 2)
     if answers.get('syn_coverage') == 'no':
         findings.append("SKUs not fully syndicated to target retailer's data system.")
 
-    numeric = round((earned / 5) * 100)
+    numeric = js_round((earned / 5) * 100)
     return {'status': to_status(numeric), 'numeric': numeric, 'findings': findings,
             'fix': 'Establish 1WorldSync account; complete GDSN syndication for all launch SKUs.'}
 
@@ -122,20 +143,20 @@ def score_edi(answers, retailer):
 
     max_pts = 9 if retailer == 'walmart' else 7
     earned = 3 if answers.get('edi_asn_capable') == 'yes' else 1
-    earned += pts(answers, 'edi_asn_timing') if answers.get('edi_asn_timing') in ('yes','partial') else 0
+    earned += graded(answers, 'edi_asn_timing', 2)
     if answers.get('edi_asn_timing') == 'no':
         findings.append('ASN not transmitted before gate-in/physical arrival.')
 
     if retailer == 'walmart':
-        earned += pts(answers, 'edi_fsma204') if answers.get('edi_fsma204') in ('yes','partial') else 0
+        earned += graded(answers, 'edi_fsma204', 2)
         if answers.get('edi_fsma204') == 'no':
             findings.append('ASN does not include FSMA 204 Key Data Elements — required as of August 2025.')
 
-    earned += pts(answers, 'edi_label_compliant') if answers.get('edi_label_compliant') in ('yes','partial') else 0
+    earned += graded(answers, 'edi_label_compliant', 2)
     if answers.get('edi_label_compliant') == 'no':
         findings.append('GS1-128 / SSCC-18 labels non-compliant or not matching ASN.')
 
-    numeric = round((earned / max_pts) * 100)
+    numeric = js_round((earned / max_pts) * 100)
     return {'status': to_status(numeric), 'numeric': numeric, 'findings': findings,
             'fix': 'Implement EDI; ensure ASN timing; add FSMA 204 KDEs (Walmart).'}
 
@@ -154,18 +175,18 @@ def score_fulfillment(answers, retailer):
                 'findings': [otif_finding.get(retailer, 'OTIF rate below threshold.')],
                 'fix': 'Improve delivery consistency; update label format to GS1-128 with correct SSCC-18.'}
 
-    max_pts = 6 if retailer == 'costco' else 5
+    # ff_label_compliant removed from the question bank (covered by
+    # edi_label_compliant). Max points: Costco = 4 (otif 3 + thermal 1),
+    # others = 3 (otif only). Mirrors scoring.js scoreFulfillment.
+    max_pts = 4 if retailer == 'costco' else 3
     earned = 3 if answers.get('ff_otif_rate') == 'yes' else 1
-    earned += pts(answers, 'ff_label_compliant') if answers.get('ff_label_compliant') in ('yes','partial') else 0
-    if answers.get('ff_label_compliant') == 'no':
-        findings.append('Shipping labels non-compliant or SSCC not matching ASN.')
 
     if retailer == 'costco':
         earned += 1 if answers.get('ff_thermal') == 'yes' else 0
         if answers.get('ff_thermal') == 'no':
             findings.append('Direct thermal printing used — Costco requires thermal transfer.')
 
-    numeric = round((earned / max_pts) * 100)
+    numeric = js_round((earned / max_pts) * 100)
     return {'status': to_status(numeric, thresholds['green'], thresholds['yellow']),
             'numeric': numeric, 'findings': findings,
             'fix': 'Improve delivery consistency; update label format to GS1-128 with correct SSCC-18.'}
@@ -179,11 +200,11 @@ def score_financial(answers, retailer):
                 'fix': 'Model full year-one cost structure; confirm 90-day cash position including chargeback reserve.'}
 
     earned = 3 if answers.get('fin_cost_modeled') == 'yes' else 1
-    earned += pts(answers, 'fin_cash_runway') if answers.get('fin_cash_runway') in ('yes','partial') else 0
+    earned += graded(answers, 'fin_cash_runway', 2)
     if answers.get('fin_cash_runway') == 'no':
         findings.append('Cash runway insufficient for first 90 days including chargeback buffer.')
 
-    numeric = round((earned / 5) * 100)
+    numeric = js_round((earned / 5) * 100)
     return {'status': to_status(numeric), 'numeric': numeric, 'findings': findings,
             'fix': 'Model full year-one cost structure; confirm 90-day cash position.'}
 
@@ -196,11 +217,11 @@ def score_production(answers, retailer):
                 'fix': 'Confirm co-packer capacity in writing; align production schedule with buyer delivery window.'}
 
     earned = 3 if answers.get('prod_capacity_confirmed') == 'yes' else 1
-    earned += pts(answers, 'prod_lead_time') if answers.get('prod_lead_time') in ('yes','partial') else 0
+    earned += graded(answers, 'prod_lead_time', 2)
     if answers.get('prod_lead_time') == 'no':
         findings.append("Production lead time exceeds buyer's timeline window.")
 
-    numeric = round((earned / 5) * 100)
+    numeric = js_round((earned / 5) * 100)
     return {'status': to_status(numeric), 'numeric': numeric, 'findings': findings,
             'fix': 'Confirm co-packer capacity in writing; align production schedule.'}
 
@@ -214,7 +235,7 @@ def score_compliance(answers, retailer):
                 'fix': 'Reformulate to remove all prohibited ingredients per Whole Foods prohibited ingredient list.'}
 
     max_pts = 8 if retailer == 'wholeFoods' else 5
-    earned = pts(answers, 'comp_fsma_pcqi') if answers.get('comp_fsma_pcqi') in ('yes','partial') else 0
+    earned = graded(answers, 'comp_fsma_pcqi', 3)
     if answers.get('comp_fsma_pcqi') == 'no':
         findings.append('FSMA PCQI documentation not current.')
 
@@ -223,13 +244,13 @@ def score_compliance(answers, retailer):
             return {'status': 'red', 'numeric': 0, 'hardGate': True,
                     'findings': ['GFSI/SQF/BRCGS certification missing or expired — required for Whole Foods.'],
                     'fix': 'Pursue GFSI certification; update FSMA PCQI documentation.'}
-        earned += pts(answers, 'comp_gfsi_cert') if answers.get('comp_gfsi_cert') in ('yes','partial') else 0
+        earned += graded(answers, 'comp_gfsi_cert', 3)
 
-    earned += pts(answers, 'comp_allergens') if answers.get('comp_allergens') in ('yes','partial') else 0
+    earned += graded(answers, 'comp_allergens', 2)
     if answers.get('comp_allergens') == 'no':
         findings.append('Allergen declarations inconsistent across label, spec sheet, and GDSN data.')
 
-    numeric = round((earned / max_pts) * 100)
+    numeric = js_round((earned / max_pts) * 100)
     return {'status': to_status(numeric), 'numeric': numeric, 'findings': findings,
             'fix': 'Update FSMA PCQI; pursue GFSI cert (WFM); verify allergen consistency.'}
 
@@ -242,11 +263,11 @@ def score_team(answers, retailer):
                 'fix': 'Assign a named retailer owner; create chargeback dispute process and response SLA.'}
 
     earned = 3 if answers.get('team_owner') == 'yes' else 1
-    earned += pts(answers, 'team_chargeback_process') if answers.get('team_chargeback_process') in ('yes','partial') else 0
+    earned += graded(answers, 'team_chargeback_process', 2)
     if answers.get('team_chargeback_process') == 'no':
         findings.append('No defined process for chargebacks and deductions.')
 
-    numeric = round((earned / 5) * 100)
+    numeric = js_round((earned / 5) * 100)
     return {'status': to_status(numeric), 'numeric': numeric, 'findings': findings,
             'fix': 'Assign a named retailer owner; create chargeback dispute process.'}
 

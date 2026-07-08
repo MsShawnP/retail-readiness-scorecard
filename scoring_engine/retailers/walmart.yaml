@@ -101,11 +101,11 @@ dimensions:
 
   fulfillment:
     label: Fulfillment
-    max_points: 5
+    max_points: 3
     green_threshold: 75
     yellow_threshold: 40
     fix: "Improve delivery consistency; update label format to GS1-128 with correct SSCC-18."
-    notes: "Higher green threshold (75) reflects Walmart's strict 98% OTIF composite."
+    notes: "Higher green threshold (75) reflects Walmart's strict 98% OTIF composite. Label compliance is scored under EDI (edi_label_compliant)."
     questions:
       - id: ff_otif_rate
         text: "Is your current OTIF rate at or above Walmart's 98% composite threshold?"
@@ -114,12 +114,6 @@ dimensions:
           yes: 3   # At or above 98%
           partial: 1   # 93–97%
           no: 0   # Below 93% — Red gate
-      - id: ff_label_compliant
-        text: "Are your shipping labels GS1-128 with accurate SSCC-18 matching your ASN?"
-        options:
-          yes: 2
-          partial: 1
-          no: 0
 
   financial:
     label: Financial Readiness
