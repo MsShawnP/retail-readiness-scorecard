@@ -1,9 +1,17 @@
 #!/usr/bin/env python3
 """
-Retail Readiness Scorecard — Python scoring script.
+Retail Readiness Scorecard — Python reference scorer.
 
-Reads YAML retailer rules and scores a set of answers against them.
-Produces output identical to the JavaScript scoring engine (scoring.js).
+Standalone reimplementation of the JavaScript scoring engine
+(src/engine/scoring.js), which is the authoritative engine the live site uses.
+Retailer rules (graded weights, max points, thresholds) are encoded as constants
+below to mirror scoring.js; the YAML files in scoring_engine/retailers/ are
+human-readable spec references and are NOT read at runtime.
+
+Verified identical to scoring.js on the substantive output — per-dimension status
+and numeric score, topBlockers, verdict, timeline, and overallStatus — for every
+answer set. The advisory `findings`/`fix` text is condensed here and is not
+intended to be byte-identical to the JS strings.
 
 Usage:
   python scoring_engine/score.py --retailer walmart --answers '{"edi_asn_capable":"yes",...}'
