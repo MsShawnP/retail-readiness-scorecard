@@ -382,17 +382,3 @@ export function renderResults(brandName, retailer, scores) {
     ${actions}
   `;
 }
-
-// Keep the stub export for backwards-compat during transition
-export function renderResultsStub() {
-  return renderResults('Your Brand', 'walmart', {
-    productData: { status: 'yellow', numeric: 57, findings: [], fix: '' },
-    syndication: { status: 'green',  numeric: 80, findings: [], fix: '' },
-    edi:         { status: 'red',    numeric: 0,  findings: ['No EDI capability.'], fix: 'Implement EDI.' },
-    fulfillment: { status: 'yellow', numeric: 33, findings: [], fix: '' },
-    financial:   { status: 'green',  numeric: 100,findings: [], fix: '' },
-    production:  { status: 'green',  numeric: 80, findings: [], fix: '' },
-    compliance:  { status: 'green',  numeric: 100,findings: [], fix: '' },
-    team:        { status: 'red',    numeric: 0,  findings: ['No named owner.'], fix: 'Assign owner.' },
-  });
-}
