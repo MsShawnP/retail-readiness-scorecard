@@ -1,0 +1,43 @@
+name: Deploy to Cloudflare Pages
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - "*.md"
+      - "docs/**"
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Build and deploy
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      # The single-file build emits dist/retail-readiness-scorecard.html only.
+      # Copy it to index.html so the Pages root URL serves the tool; the original
+      # filename is kept so any existing links to it keep working.
+      - name: Prepare index.html for Pages root
+        run: cp dist/retail-readiness-scorecard.html dist/index.html
+
+      - name: Deploy to Cloudflare Pages
+        run: npx wrangler pages deploy dist --project-name retail-readiness-scorecard
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
