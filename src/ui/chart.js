@@ -17,7 +17,7 @@ const BAR_FILL = {
 
 // Status is carried in the percentage label ink (higher-contrast steps).
 const STATUS_INK = {
-  red:    '#cc100a',  // Red-42 (brand ink)
+  red:    '#8e0b07',  // Red-20 — unified with the bar red (was #cc100a)
   yellow: '#a88312',  // New York-35 (dark gold)
   green:  '#158f75',  // Hong Kong-35
 };

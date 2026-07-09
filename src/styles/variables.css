@@ -13,6 +13,7 @@
 
   /* Status colors */
   --status-red: #cc100a;
+  --status-red-fill: #8e0b07; /* Red-20 — for FILLS (chips, tints); --status-red stays ink-only */
   --status-yellow: #a88312; /* New York-35 (amber) — replaces off-palette darkgoldenrod */
   --status-green: #158f75;
 

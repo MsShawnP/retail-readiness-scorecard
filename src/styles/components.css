@@ -203,7 +203,7 @@
   margin-top: 3px;
 }
 
-.blocker-chip.red  { background: var(--status-red); }
+.blocker-chip.red  { background: var(--status-red-fill); }
 .blocker-chip.yellow { background: var(--status-yellow); }
 .blocker-chip.green  { background: var(--status-green); }
 
@@ -314,7 +314,7 @@
   flex-shrink: 0;
 }
 
-.status-badge.red    { background: rgba(204,16,10,0.1);    color: var(--status-red); }
+.status-badge.red    { background: rgba(142,11,7,0.1);     color: var(--status-red); }
 .status-badge.yellow { background: rgba(168,131,18,0.1);   color: var(--status-yellow); }
 .status-badge.green  { background: rgba(21,143,117,0.1);   color: var(--status-green); }
 
