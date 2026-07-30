@@ -344,7 +344,7 @@
   font-weight: 700;
   line-height: 1.35;
   color: var(--ink);
-  max-width: 660px;
+  max-width: var(--ll-body-max-width, 720px);
   margin-bottom: 28px;
 }
 
