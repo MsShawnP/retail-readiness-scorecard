@@ -14,8 +14,8 @@ Select a target retailer, answer 12–18 adaptive questions, receive a Red / Yel
 
 | Dimension | What it evaluates |
 |---|---|
-| Product Data | GTIN compliance, 1WorldSync/GDSN syndication status |
-| Syndication | Item setup completeness for the target retailer's portal |
+| Product Data | GTIN compliance, trade item hierarchy, portal item setup (Item 360) |
+| Syndication | 1WorldSync/GDSN account and syndication coverage for launch SKUs |
 | EDI Capability | 850/856/810 capability, SSCC-18, retailer-specific requirements |
 | Fulfillment | Fill rate history, OTIF track record, carrier setup |
 | Financial Readiness | Working capital, slotting fee coverage, deduction reserve |

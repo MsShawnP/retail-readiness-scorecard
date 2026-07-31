@@ -84,6 +84,12 @@ def to_status(numeric, green=70, yellow=30):
     return 'red'
 
 
+def cap_at_yellow(status, blocked):
+    """Mirror scoring.js capAtYellow: a blocking gap forces a would-be Green to
+    Yellow so the badge can't read Green next to a "will be rejected" finding."""
+    return 'yellow' if (blocked and status == 'green') else status
+
+
 def graded(answers, key, yes_pts):
     """Graded points for an answer, mirroring scoring.js: yes=yes_pts, partial=1, no=0.
 
@@ -121,7 +127,10 @@ def score_product_data(answers, retailer):
             findings.append('Item 360 / GDSN attributes incomplete — Walmart item setup will be rejected.')
 
     numeric = js_round((earned / max_pts) * 100)
-    return {'status': to_status(numeric), 'numeric': numeric, 'findings': findings,
+    # Item 360 incomplete blocks item setup at Walmart — never let it read Green.
+    status = cap_at_yellow(to_status(numeric),
+                           retailer == 'walmart' and answers.get('pd_item360') == 'no')
+    return {'status': status, 'numeric': numeric, 'findings': findings,
             'fix': 'Validate all GTINs in GS1 registry; complete trade item hierarchy documentation.'}
 
 
@@ -149,6 +158,13 @@ def score_edi(answers, retailer):
                 'findings': ['No EDI capability — cannot receive purchase orders or send ASNs electronically.'],
                 'fix': 'Implement EDI capability (850/855/856/810/997); ensure ASN before gate-in.'}
 
+    # FSMA 204 KDEs are legally required on every Walmart food/beverage ASN since
+    # Aug 2025 — hard gate: Walmart will not accept the ASN without them.
+    if retailer == 'walmart' and answers.get('edi_fsma204') == 'no':
+        return {'status': 'red', 'numeric': 0,
+                'findings': ['ASN does not include FSMA 204 Key Data Elements — legally required for all Walmart food/beverage shipments since August 2025. Walmart will not accept the ASN.'],
+                'fix': 'Add FSMA 204 Key Data Elements to every ASN before shipping to Walmart.'}
+
     max_pts = 9 if retailer == 'walmart' else 7
     earned = 3 if answers.get('edi_asn_capable') == 'yes' else 1
     earned += graded(answers, 'edi_asn_timing', 2)
@@ -165,7 +181,11 @@ def score_edi(answers, retailer):
         findings.append('GS1-128 / SSCC-18 labels non-compliant or not matching ASN.')
 
     numeric = js_round((earned / max_pts) * 100)
-    return {'status': to_status(numeric), 'numeric': numeric, 'findings': findings,
+    # Non-compliant labels cause receiving failures — never let EDI read Green.
+    # Mirrors scoring.js capAtYellow on edi_label_compliant.
+    status = cap_at_yellow(to_status(numeric),
+                           answers.get('edi_label_compliant') == 'no')
+    return {'status': status, 'numeric': numeric, 'findings': findings,
             'fix': 'Implement EDI; ensure ASN timing; add FSMA 204 KDEs (Walmart).'}
 
 
@@ -195,7 +215,12 @@ def score_fulfillment(answers, retailer):
             findings.append('Direct thermal printing used — Costco requires thermal transfer.')
 
     numeric = js_round((earned / max_pts) * 100)
-    return {'status': to_status(numeric, thresholds['green'], thresholds['yellow']),
+    # Direct thermal labels are rejected at Costco depots — never read Green.
+    # Mirrors scoring.js capAtYellow on ff_thermal.
+    status = cap_at_yellow(
+        to_status(numeric, thresholds['green'], thresholds['yellow']),
+        retailer == 'costco' and answers.get('ff_thermal') == 'no')
+    return {'status': status,
             'numeric': numeric, 'findings': findings,
             'fix': 'Improve delivery consistency; update label format to GS1-128 with correct SSCC-18.'}
 
@@ -303,13 +328,18 @@ def compute_scores(answers, retailer):
 
 
 def get_top_blockers(scores):
+    """Reds first (by weight desc), then Yellows — never padded with Greens.
+
+    Mirrors scoring.js getTopBlockers: an all-green profile returns [], so a
+    "Top Priorities" list can never surface a dimension with no gaps.
+    """
     by_status = {'red': [], 'yellow': [], 'green': []}
     for dim, result in scores.items():
         by_status[result['status']].append(dim)
     sort_key = lambda d: -DIMENSION_WEIGHTS.get(d, 0)
     for status in by_status:
         by_status[status].sort(key=sort_key)
-    return (by_status['red'] + by_status['yellow'] + by_status['green'])[:3]
+    return (by_status['red'] + by_status['yellow'])[:3]
 
 
 def get_overall_verdict(scores, retailer):
