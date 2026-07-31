@@ -114,3 +114,61 @@ Each entry records what was found, what was fixed, and when to
 check again.
 
 <!-- Entries are added by /improve — don't delete this section -->
+
+### 2026-07-31 — Improvement pass — COMPLETE
+
+- **Trigger:** User-initiated (code review + UI review). Verify CEO/CFO-ready.
+- **Reviewed:** scoring engine (vs YAML + Python), flow, questions, renderers,
+  PDF, tests; correctness/security/testing reviewers + live browser runs.
+- **Headline:** Scoring math verified correct — no drift from the audited spec.
+  All issues were presentation-layer.
+- **Fixed:** C1 (no blank Red/Yellow cards), I1 (no green padding in Top
+  Priorities), intro copy (≤30s comprehension), I4 (absolute links), I2/I3
+  (partial/boundary/gate-sync tests + 2 weak tests fixed), N2/N3/N4, C2
+  (blocking gaps cap-at-Yellow / FSMA 204 Red gate). 54/54 tests. 397KB gzip.
+- **Security:** clean (brand name escaped, PDF filename sanitized, offline).
+- **Corrected an audit error:** src/retail-readiness-scorecard.html is the
+  Vite source entry, not a build artifact.
+- **Next review:** 2026-08-30.
+
+---
+
+### 2026-07-31 — Improvement pass (code review + UI review)
+
+**Trigger:** User-initiated. Goal: verify the tool is CEO/CFO-ready; user
+suspicious of all prior AI-written code.
+
+**Reviewed:** scoring engine (vs YAML + score.py), flow engine, question
+bank, UI renderers, PDF export, tests. Ran correctness/security/testing
+reviewers + live browser run.
+
+**Headline:** Scoring math is correct and matches the audited YAML/Python
+exactly. All real issues are in the presentation layer.
+
+**Fixing this arc:**
+- [x] C1 — status-aware empty-state (screens.js + pdf.js, shared
+      emptyStateText in scoring.js) + concrete findings on every "partial"
+      primary-question branch. Verified live: Walmart OTIF=partial now shows
+      "Red · 33%" with a real finding, not "No critical gaps."
+- [x] I1 — getTopBlockers no longer pads with Greens; callout shows
+      "Every dimension meets the bar" when all-clear. Verified live.
+- [x] Intro copy — now names audience + Walmart/Costco/Whole Foods + output.
+- [x] I4 — links now absolute https://lailarallc.com/… (target=_blank).
+- [x] I2+I3 — added partial/boundary/hard-gate-near-miss/findings-invariant
+      tests; fixed the 2 weak tests (real question bank + real verdict).
+      48/48 passing.
+- [x] N1 — corrected: src/retail-readiness-scorecard.html is the Vite source
+      entry, NOT an artifact (kept). Removed untracked src/node_modules +
+      src/dist cruft.
+- [x] N2 — added gate-integrity test (every redGateValues gate scores Red 0).
+- [x] N3 — brandMark() now escapes internally; callers pass raw values.
+- [x] N4 — scripts/check-offline.mjs runs as postbuild; fails build on any
+      external resource load. Passing.
+
+**C2 — resolved (user decision 2026-07-31):**
+- [x] Cap at Yellow: Item 360, EDI labels, Costco thermal. Hard Red gate:
+      FSMA 204 (Walmart). Legend updated to explain caps. Verified live:
+      Costco direct-thermal now "1 Gap to Close" / Fulfillment "Yellow · 75%"
+      (was "Ready" / "Green · 75%").
+
+**Next review:** 2026-08-30 (post-fix; project otherwise stable).
