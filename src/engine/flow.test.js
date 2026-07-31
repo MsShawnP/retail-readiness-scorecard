@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { initFlow, getNextQuestion, answerQuestion, undoLastAnswer, isComplete, getProgressEstimate } from './flow.js';
-import { getQuestionText } from '../data/questions.js';
+import { getQuestionText, QUESTIONS } from '../data/questions.js';
+import { computeScores, getOverallVerdict } from './scoring.js';
 
 // ─── Helpers ───────────────────────────────────────────────────────────────
 
@@ -137,7 +138,7 @@ describe('question count bounds', () => {
     expect(steps).toBeLessThanOrEqual(18);
   });
 
-  it('walmart all-gate-no path still produces a complete assessment', () => {
+  it('walmart all-gate-no path scores every gated dimension Red and verdict Not Ready', () => {
     const { state } = runToCompletion('walmart', {
       pd_gtin_valid: 'no',
       syn_gdsn_active: 'no',
@@ -149,6 +150,17 @@ describe('question count bounds', () => {
       team_owner: 'no',
     });
     expect(isComplete(state)).toBe(true);
+
+    // The flow answers must actually drive the executive-facing verdict.
+    const scores = computeScores(state.answers, 'walmart');
+    const gatedDims = ['productData', 'syndication', 'edi', 'fulfillment', 'financial', 'production', 'team'];
+    for (const dim of gatedDims) {
+      expect(scores[dim].status, `${dim} should be red`).toBe('red');
+      expect(scores[dim].numeric).toBe(0);
+    }
+    const { overallStatus, verdict } = getOverallVerdict(scores, 'walmart');
+    expect(overallStatus).toBe('not-ready');
+    expect(verdict).toMatch(/Not Ready for Walmart/);
   });
 });
 
@@ -175,16 +187,16 @@ describe('isComplete', () => {
 
 // ─── Retailer-specific question text ──────────────────────────────────────
 
-describe('retailer-specific question text', () => {
-  it('Walmart OTIF question references 98%', () => {
-    const q = { text: { walmart: 'Is your current OTIF rate at or above Walmart\'s 98% composite threshold?' } };
-    expect(getQuestionText(q, 'walmart')).toContain('98%');
+describe('retailer-specific question text (against the real question bank)', () => {
+  const otif = QUESTIONS.find(q => q.id === 'ff_otif_rate');
+
+  it('the real Walmart OTIF question references the 98% threshold', () => {
+    expect(otif).toBeDefined();
+    expect(getQuestionText(otif, 'walmart')).toContain('98%');
   });
 
-  it('Costco OTIF question does not reference a percentage', () => {
-    const q = { text: { costco: 'Do you have a consistent documented history of on-time delivery within appointment windows?' } };
-    const text = getQuestionText(q, 'costco');
-    expect(text).not.toMatch(/\d+%/);
+  it('the real Costco OTIF question does not reference a percentage', () => {
+    expect(getQuestionText(otif, 'costco')).not.toMatch(/\d+%/);
   });
 });
 

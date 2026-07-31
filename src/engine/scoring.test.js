@@ -4,8 +4,10 @@ import {
   computeScores,
   getTopBlockers,
   getOverallVerdict,
+  emptyStateText,
   DIMENSIONS,
 } from './scoring.js';
+import { QUESTIONS } from '../data/questions.js';
 
 // ─── EDI ───────────────────────────────────────────────────────────────────
 
@@ -151,14 +153,149 @@ describe('getTopBlockers', () => {
     expect(['syndication', 'productData']).toContain(blockers[2]);
   });
 
-  it('returns empty-ish list when all green', () => {
+  it('returns an empty list when all green (never pads with greens)', () => {
     const scores = Object.fromEntries(
       ['productData','syndication','edi','fulfillment','financial','production','compliance','team']
         .map(d => [d, { status: 'green' }])
     );
     const blockers = getTopBlockers(scores);
-    // With all green, returns 3 greens (highest weight first) — still length 3
-    expect(blockers).toHaveLength(3);
+    // A "Top Priorities" list must never show dimensions that have no gaps.
+    expect(blockers).toHaveLength(0);
+  });
+
+  it('never includes a green dimension even when fewer than 3 issues exist', () => {
+    const scores = {
+      productData: { status: 'green' },
+      syndication: { status: 'green' },
+      edi: { status: 'red' },
+      fulfillment: { status: 'green' },
+      financial: { status: 'yellow' },
+      production: { status: 'green' },
+      compliance: { status: 'green' },
+      team: { status: 'green' },
+    };
+    const blockers = getTopBlockers(scores);
+    expect(blockers).toEqual(['edi', 'financial']); // red before yellow, no green padding
+  });
+});
+
+// ─── Partial-answer middle band (the untested band where wrong colors hide) ──
+
+describe('scoreDimension — partial answers diverge by retailer (fulfillment)', () => {
+  it('otif partial is RED for walmart (33% < 40 yellow threshold)', () => {
+    const r = scoreDimension('fulfillment', { ff_otif_rate: 'partial' }, 'walmart');
+    expect(r.numeric).toBe(33);
+    expect(r.status).toBe('red');
+    expect(r.findings.length).toBeGreaterThan(0); // never blank
+  });
+
+  it('otif partial is YELLOW for wholeFoods (33% >= 30 yellow threshold)', () => {
+    const r = scoreDimension('fulfillment', { ff_otif_rate: 'partial' }, 'wholeFoods');
+    expect(r.numeric).toBe(33);
+    expect(r.status).toBe('yellow');
+    expect(r.findings.length).toBeGreaterThan(0);
+  });
+
+  it('otif partial + thermal no is RED for costco (25%)', () => {
+    const r = scoreDimension('fulfillment', { ff_otif_rate: 'partial', ff_thermal: 'no' }, 'costco');
+    expect(r.numeric).toBe(25);
+    expect(r.status).toBe('red');
+  });
+});
+
+describe('scoreDimension — threshold boundaries', () => {
+  it('productData walmart yes/yes/no lands at exactly 71% GREEN', () => {
+    const r = scoreDimension('productData', {
+      pd_gtin_valid: 'yes', pd_hierarchy: 'yes', pd_item360: 'no',
+    }, 'walmart');
+    expect(r.numeric).toBe(71); // 5/7
+    expect(r.status).toBe('green');
+  });
+
+  it('edi walmart yes/partial/partial/partial lands at exactly 67% YELLOW', () => {
+    const r = scoreDimension('edi', {
+      edi_asn_capable: 'yes', edi_asn_timing: 'partial',
+      edi_fsma204: 'partial', edi_label_compliant: 'partial',
+    }, 'walmart');
+    expect(r.numeric).toBe(67); // 6/9
+    expect(r.status).toBe('yellow');
+  });
+});
+
+describe('scoreDimension — WFM hard-gate near-misses must NOT gate', () => {
+  it('comp_gfsi_cert partial is scored, not hard-gated', () => {
+    const r = scoreDimension('compliance', {
+      comp_ingredients: 'no', comp_fsma_pcqi: 'yes',
+      comp_gfsi_cert: 'partial', comp_allergens: 'yes',
+    }, 'wholeFoods');
+    expect(r.hardGate).toBeFalsy();
+    expect(r.numeric).toBeGreaterThan(0);
+  });
+
+  it('comp_ingredients partial (unsure) does not fire the prohibited-ingredient gate', () => {
+    const r = scoreDimension('compliance', {
+      comp_ingredients: 'partial', comp_fsma_pcqi: 'yes',
+      comp_gfsi_cert: 'yes', comp_allergens: 'yes',
+    }, 'wholeFoods');
+    expect(r.hardGate).toBeFalsy();
+    expect(r.status).not.toBe('red');
+  });
+});
+
+// ─── Invariant: a non-green dimension is never presented as "no gaps" ─────────
+
+describe('empty-state / findings invariant', () => {
+  it('emptyStateText never claims "no gaps" for red or yellow', () => {
+    expect(emptyStateText('green')).toMatch(/no critical gaps/i);
+    expect(emptyStateText('yellow')).not.toMatch(/no critical gaps/i);
+    expect(emptyStateText('red')).not.toMatch(/no critical gaps/i);
+  });
+
+  it('every non-green dimension result carries at least one finding', () => {
+    // Realistic sweep: start every dimension question at its best answer, then
+    // flip ONE question to partial/no (as a completed real assessment would look)
+    // and assert that any resulting non-green status is explained by a finding.
+    const bestAnswer = q => (q.id === 'comp_ingredients' ? 'no' : 'yes');
+    const retailers = ['walmart', 'costco', 'wholeFoods'];
+    for (const retailer of retailers) {
+      const dims = [...new Set(QUESTIONS.filter(q => q.retailers.includes(retailer)).map(q => q.dimension))];
+      for (const dim of dims) {
+        const dimQs = QUESTIONS.filter(q => q.dimension === dim && q.retailers.includes(retailer));
+        for (const target of dimQs) {
+          for (const val of ['partial', 'no']) {
+            const answers = Object.fromEntries(dimQs.map(q => [q.id, bestAnswer(q)]));
+            answers[target.id] = val;
+            const r = scoreDimension(dim, answers, retailer);
+            if (r.status !== 'green') {
+              expect(
+                r.findings.length,
+                `${retailer}/${dim} (${target.id}=${val}) is ${r.status} but has no findings`
+              ).toBeGreaterThan(0);
+            }
+          }
+        }
+      }
+    }
+  });
+});
+
+// ─── N2: gate values in questions.js stay in sync with scoring.js behavior ────
+
+describe('gate integrity — questions.js redGateValues match scoring.js', () => {
+  it('every gate question, answered with its gate value, scores the dimension Red 0', () => {
+    const gateQuestions = QUESTIONS.filter(q => q.isGate && q.redGateValues.length > 0);
+    expect(gateQuestions.length).toBeGreaterThan(0);
+    for (const q of gateQuestions) {
+      for (const gateVal of q.redGateValues) {
+        const retailer = q.retailers[0];
+        const r = scoreDimension(q.dimension, { [q.id]: gateVal }, retailer);
+        expect(
+          r.status,
+          `${q.id}=${gateVal} should gate ${q.dimension} Red for ${retailer}`
+        ).toBe('red');
+        expect(r.numeric).toBe(0);
+      }
+    }
   });
 });
 
