@@ -267,6 +267,8 @@ export function renderResults(brandName, retailer, scores) {
       <p style="font-size: 11px; color: var(--text-secondary); font-style: italic; margin-top: 6px; padding: 0 4px;">
         Scores weighted by retailer requirement severity.
         Red &lt;30 · Yellow 30–69 · Green ≥70. Fulfillment thresholds vary by retailer.
+        A launch-blocking gap (e.g. missing FSMA 204, non-compliant labels, direct-thermal printing)
+        can cap or fail a dimension regardless of its score.
       </p>
     </div>
   `;

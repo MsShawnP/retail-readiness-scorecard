@@ -204,9 +204,10 @@ describe('scoreDimension — partial answers diverge by retailer (fulfillment)',
 });
 
 describe('scoreDimension — threshold boundaries', () => {
-  it('productData walmart yes/yes/no lands at exactly 71% GREEN', () => {
+  it('productData walmart lands at exactly 71% GREEN at the cutoff (no blocking cap)', () => {
+    // yes/partial/partial = 5/7 = 71%, and item360=partial does not cap.
     const r = scoreDimension('productData', {
-      pd_gtin_valid: 'yes', pd_hierarchy: 'yes', pd_item360: 'no',
+      pd_gtin_valid: 'yes', pd_hierarchy: 'partial', pd_item360: 'partial',
     }, 'walmart');
     expect(r.numeric).toBe(71); // 5/7
     expect(r.status).toBe('green');
@@ -296,6 +297,61 @@ describe('gate integrity — questions.js redGateValues match scoring.js', () =>
         expect(r.numeric).toBe(0);
       }
     }
+  });
+});
+
+// ─── C2: blocking gaps cap or fail the dimension regardless of score ─────────
+
+describe('blocking-gap caps (C2)', () => {
+  it('Item 360 "no" caps Walmart Product Data at Yellow (never Green)', () => {
+    const r = scoreDimension('productData', {
+      pd_gtin_valid: 'yes', pd_hierarchy: 'yes', pd_item360: 'no',
+    }, 'walmart');
+    expect(r.numeric).toBe(71);      // score would round to Green
+    expect(r.status).toBe('yellow'); // …but item setup is blocked
+    expect(r.findings.some(f => f.toLowerCase().includes('item setup'))).toBe(true);
+  });
+
+  it('Item 360 "partial" does NOT cap (only "no" blocks)', () => {
+    const r = scoreDimension('productData', {
+      pd_gtin_valid: 'yes', pd_hierarchy: 'yes', pd_item360: 'partial',
+    }, 'walmart');
+    expect(r.status).toBe('green');
+  });
+
+  it('non-compliant labels cap EDI at Yellow', () => {
+    const r = scoreDimension('edi', {
+      edi_asn_capable: 'yes', edi_asn_timing: 'yes',
+      edi_fsma204: 'yes', edi_label_compliant: 'no',
+    }, 'walmart');
+    expect(r.numeric).toBe(78);      // 7/9, would be Green
+    expect(r.status).toBe('yellow');
+  });
+
+  it('direct-thermal caps Costco Fulfillment at Yellow (was 75% Green)', () => {
+    const r = scoreDimension('fulfillment', {
+      ff_otif_rate: 'yes', ff_thermal: 'no',
+    }, 'costco');
+    expect(r.numeric).toBe(75);
+    expect(r.status).toBe('yellow');
+    expect(r.findings.some(f => f.includes('thermal transfer'))).toBe(true);
+  });
+
+  it('missing FSMA 204 is a hard Red gate for Walmart EDI', () => {
+    const r = scoreDimension('edi', {
+      edi_asn_capable: 'yes', edi_asn_timing: 'yes',
+      edi_fsma204: 'no', edi_label_compliant: 'yes',
+    }, 'walmart');
+    expect(r.status).toBe('red');
+    expect(r.numeric).toBe(0);
+    expect(r.findings.some(f => f.includes('FSMA 204'))).toBe(true);
+  });
+
+  it('FSMA 204 gate does not apply to costco/wholeFoods (no such requirement)', () => {
+    const r = scoreDimension('edi', {
+      edi_asn_capable: 'yes', edi_asn_timing: 'yes', edi_label_compliant: 'yes',
+    }, 'costco');
+    expect(r.status).toBe('green');
   });
 });
 

@@ -295,7 +295,9 @@ function drawBarChart(doc, y, scores) {
   // Chart footnote
   sans(doc, 7);
   color(doc, COLOR_TEXT_SEC);
-  doc.text('Red <30 · Yellow 30–69 · Green ≥70. Fulfillment thresholds vary by retailer. Scores weighted by retailer requirement severity.', MARGIN_L, y);
+  doc.text('Red <30 · Yellow 30–69 · Green ≥70. Fulfillment thresholds vary by retailer. Scores weighted by requirement severity.', MARGIN_L, y);
+  y += 3.5;
+  doc.text('A launch-blocking gap (missing FSMA 204, non-compliant labels, direct-thermal) can cap or fail a dimension regardless of score.', MARGIN_L, y);
   y += 7;
 
   return y;

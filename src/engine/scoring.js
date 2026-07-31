@@ -61,6 +61,13 @@ function toStatus(numeric, greenThreshold = 70, yellowThreshold = 30) {
   return 'red';
 }
 
+// A blocking gap can cap a dimension below the raw score. When `blocked`, a
+// would-be Green is forced to Yellow so the badge can't read Green next to a
+// "will be rejected" finding. (Full-Red blockers use an early gate return.)
+function capAtYellow(status, blocked) {
+  return blocked && status === 'green' ? 'yellow' : status;
+}
+
 // ─── Product Data ──────────────────────────────────────────────────────────
 
 function scoreProductData(answers, retailer) {
@@ -93,7 +100,8 @@ function scoreProductData(answers, retailer) {
   }
 
   const numeric = Math.round((earned / maxPoints) * 100);
-  const status = toStatus(numeric);
+  // Item 360 incomplete blocks item setup at Walmart — never let it read Green.
+  const status = capAtYellow(toStatus(numeric), retailer === 'walmart' && a.pd_item360 === 'no');
   return {
     status,
     numeric,
@@ -147,6 +155,17 @@ function scoreEdi(answers, retailer) {
     };
   }
 
+  // FSMA 204 KDEs are legally required on every Walmart food/beverage ASN since
+  // Aug 2025 — a hard gate: Walmart will not accept the ASN without them.
+  if (retailer === 'walmart' && a.edi_fsma204 === 'no') {
+    return {
+      status: 'red',
+      numeric: 0,
+      findings: ['ASN does not include FSMA 204 Key Data Elements — legally required for all Walmart food/beverage shipments since August 2025. Walmart will not accept the ASN.'],
+      fix: 'Add FSMA 204 Key Data Elements to every ASN before shipping to Walmart.',
+    };
+  }
+
   const maxPoints = retailer === 'walmart' ? 9 : 7;
   let earned = a.edi_asn_capable === 'yes' ? 3 : 1;
   if (a.edi_asn_capable === 'partial') findings.push('EDI in setup or testing but not yet live — cannot transact until certified.');
@@ -166,8 +185,10 @@ function scoreEdi(answers, retailer) {
   if (a.edi_label_compliant === 'no') findings.push('GS1-128 / SSCC-18 labels non-compliant or not matching ASN.');
 
   const numeric = Math.round((earned / maxPoints) * 100);
+  // Non-compliant labels cause receiving failures — never let EDI read Green.
+  const status = capAtYellow(toStatus(numeric), a.edi_label_compliant === 'no');
   return {
-    status: toStatus(numeric),
+    status,
     numeric,
     findings,
     fix: 'Implement EDI capability (850/855/856/810/997); ensure ASN transmitted before gate-in; add FSMA 204 KDEs (Walmart).',
@@ -217,7 +238,11 @@ function scoreFulfillment(answers, retailer) {
   }
 
   const numeric = Math.round((earned / maxPoints) * 100);
-  const status = toStatus(numeric, retailerData.fulfillmentGreenThreshold, retailerData.fulfillmentYellowThreshold);
+  // Direct thermal labels are rejected at Costco depots — never read Green.
+  const status = capAtYellow(
+    toStatus(numeric, retailerData.fulfillmentGreenThreshold, retailerData.fulfillmentYellowThreshold),
+    retailer === 'costco' && a.ff_thermal === 'no',
+  );
   return {
     status,
     numeric,

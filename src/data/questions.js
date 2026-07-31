@@ -156,8 +156,8 @@ export const QUESTIONS = [
   {
     id: 'edi_fsma204',
     dimension: 'edi',
-    isGate: false,
-    redGateValues: [],
+    isGate: true,
+    redGateValues: ['no'], // FSMA 204 KDEs legally required for Walmart food/bev ASNs (Aug 2025)
     retailers: ['walmart'],
     order: 3,
     text: {
