@@ -65,6 +65,18 @@ work.
 
 ---
 
+## 2026-07-31 12:00
+
+**Started from:** v1.0 shipped and tagged; open items were a cross-browser PDF check and a brand-mark color note. Ran `/improve` (code + UI review); user suspect of all prior AI code, wants CEO/CFO-ready.
+
+**Did:** Independent review — verified `scoring.js` matches `scoring_engine/` YAML + `score.py` exactly (no math drift). Reproduced two exec-facing contradictions live and fixed them: C1 (Red/Yellow cards showing "No critical gaps" — was pervasive across every dimension's partial branches; fixed at both data and renderer, both screen + PDF), I1 (Top Priorities padded with greens), plus intro copy (≤30s), I4 (absolute links), N2/N3/N4. Then C2 per user decision: Item 360 / EDI labels / Costco thermal cap at Yellow, FSMA 204 = hard Red gate; legend updated on both surfaces. Tests 37→54; offline guarantee enforced at build. 6 feature commits on `main`.
+
+**State:** 54/54 tests pass, build clean 397 KB gzip, offline check passing, tree clean. All review findings resolved; C2 verified live (Costco direct-thermal now "1 Gap to Close" / Fulfillment "Yellow · 75%").
+
+**Next:** Optional — eyeball a capped "Yellow · 75%" badge in the actual exported PDF to confirm the legend note reads right; run the still-open v1.0 cross-browser PDF spot-check (Chrome/Safari/Firefox/Edge); then consider re-tagging (v1.1).
+
+---
+
 ## 2026-05-26 18:30
 
 **Started from:** All 7 units shipped from prior session; main already pushed. Ready to tag and release.

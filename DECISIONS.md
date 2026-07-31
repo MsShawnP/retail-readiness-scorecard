@@ -24,11 +24,29 @@ Each entry:
 - **Scope:** Global — this is the project's foundational architecture.
 - **Do not:** Do not introduce a server, CDN dependency, or external fetch at any point. All CSS, JS, fonts, and libraries must be inlined in the output HTML.
 
+### 2026-07-31 — Enforce the offline guarantee at build time
+
+- **Why:** The offline-first constraint had no automated guard — a future change (swapping `doc.save()` for an HTML-based PDF render, or a font that failed to inline) could silently reintroduce a network request. `scripts/check-offline.mjs` runs as a `postbuild` step and fails the build if the bundled HTML contains any external resource-loading reference (script/link/img/iframe src+href, CSS `url()`/`@import`) or if fonts aren't inlined.
+- **Scope:** Build pipeline (`package.json` `postbuild`; `scripts/check-offline.mjs`).
+- **Do not:** Do not remove the `postbuild` hook or weaken the check to make a build pass. Anchor links (`<a href>`) and string URLs inside bundled libraries are correctly ignored — they are not resource loads.
+
 ---
 
 ## Data & Schema
 
 [Decisions about data sources, schemas, transformations]
+
+### 2026-07-31 — A launch-blocking gap overrides the numeric score band
+
+- **Why:** Some low-weight "no" answers describe conditions that hard-block transacting (Item 360 incomplete → item setup rejected; GS1-128/SSCC-18 labels non-compliant → receiving failures; Costco direct-thermal → labels rejected at depot; missing FSMA 204 KDEs → Walmart won't accept the ASN). Under pure point-weighting these could still round to Green, producing a "Ready" verdict next to a "will be rejected" finding — the worst failure for an exec-facing tool. User decided (reviewing the four cases by name) to override the score.
+- **Scope:** `scoreDimension` in `src/engine/scoring.js`. Item 360, EDI labels, and Costco thermal use `capAtYellow()` (a would-be Green becomes Yellow). FSMA 204 is a hard Red gate (early return, `numeric: 0`), mirrored as `isGate` in `questions.js`. Chart legend on both screen + PDF notes that a blocking gap can cap/fail a dimension regardless of score.
+- **Do not:** Do not let any of these four "no" answers read Green. Do not "simplify" fulfillment back to default 70/30 thresholds or drop the caps — tests in `scoring.test.js` ("blocking-gap caps (C2)") guard this. EDI asn-timing "no" is intentionally NOT capped (fine-risk, not a hard reject).
+
+### 2026-07-31 — A non-green dimension must never contradict its own badge
+
+- **Why:** Cards rendered "No critical gaps identified." under a Red/Yellow badge whenever a dimension's findings array was empty (which happened for most "partial" answers). And "Top Priorities" padded to three by appending Green dimensions. Both put self-contradicting content in front of a buyer.
+- **Scope:** `emptyStateText(status)` in `scoring.js` (shared by `screens.js` + `pdf.js`) returns status-appropriate copy — only Green may say "no gaps." Every "partial"/"no" answer branch pushes a concrete finding. `getTopBlockers` returns only Red/Yellow (0–3), never Greens.
+- **Do not:** Do not reintroduce a hardcoded "No critical gaps" fallback in either renderer, and do not pad the priorities list with Greens. Guarded by the findings-invariant sweep test.
 
 ---
 

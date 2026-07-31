@@ -33,6 +33,18 @@ quarto" or "scope, scrollytelling, decoration"]
 
 [New entries get added here, most recent at the top]
 
+### 2026-07-31 — Synchronous JS click-loop didn't advance the question flow
+
+**Attempted:** Driving the assessment flow in the preview browser by looping over `button[data-action="answer"]`, clicking the first option, and re-querying the DOM in the same synchronous `javascript_tool` call.
+
+**Why it didn't work:** `transitionTo()` in `main.js` mounts the next screen via `setTimeout(() => mountScreen(html), 80)` (an intentional 80ms exit pause). A synchronous loop re-reads the DOM before that timeout fires, so it keeps seeing the same question and clicks it repeatedly — the answers array only records the first click; the loop looks like it answered 25× but advanced one step.
+
+**What we tried instead:** Made the driver `async` and `await`ed ~140ms between clicks so each screen mount completes before the next read. Also split long driver scripts into shorter calls — the `javascript_tool` 30s cap tripped while the Browser pane was hidden (the logic completed; only the tool wrapper timed out).
+
+**Status:** Resolved
+
+**Tags:** browser, preview, javascript_tool, settimeout, transition, dom, async, flow-testing
+
 ### 2026-05-26 — `?base64` font imports return URL string in dev mode, not base64 content
 
 **Attempted:** Importing TTF fonts with `import font from '../fonts/playfair-700.ttf?base64'` and passing the result to `jsPDF.addFileToVFS()`.
