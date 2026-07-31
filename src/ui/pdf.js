@@ -19,7 +19,7 @@ import playfair700   from '../fonts/playfair-700.ttf?base64';
 import sourceSans400 from '../fonts/source-sans3-400.ttf?base64';
 import sourceSans600 from '../fonts/source-sans3-600.ttf?base64';
 
-import { DIMENSIONS, DIMENSION_LABELS, getTopBlockers, getOverallVerdict } from '../engine/scoring.js';
+import { DIMENSIONS, DIMENSION_LABELS, getTopBlockers, getOverallVerdict, emptyStateText } from '../engine/scoring.js';
 import { RETAILERS } from '../data/retailers.js';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -213,20 +213,26 @@ function drawVerdictCallout(doc, y, scores, retailer, brandName) {
   doc.text('TOP PRIORITIES', MARGIN_L + INNER_PAD, iy);
   iy += 4;
 
-  const colW = CONTENT_W / 3;
-  topBlockers.forEach((dim, i) => {
-    const s = scores[dim];
-    const label = DIMENSION_LABELS[dim] ?? dim;
-    const cx = MARGIN_L + INNER_PAD + i * colW;
+  if (topBlockers.length > 0) {
+    const colW = CONTENT_W / 3;
+    topBlockers.forEach((dim, i) => {
+      const s = scores[dim];
+      const label = DIMENSION_LABELS[dim] ?? dim;
+      const cx = MARGIN_L + INNER_PAD + i * colW;
 
-    // Color dot
-    fill(doc, STATUS_COLORS[s.status] ?? COLOR_RED);
-    doc.circle(cx + 1.5, iy - 1.5, 1.5, 'F');
+      // Color dot
+      fill(doc, STATUS_COLORS[s.status] ?? COLOR_RED);
+      doc.circle(cx + 1.5, iy - 1.5, 1.5, 'F');
 
+      sans(doc, 8, 'bold');
+      color(doc, COLOR_WHITE);
+      doc.text(label, cx + 5, iy);
+    });
+  } else {
     sans(doc, 8, 'bold');
     color(doc, COLOR_WHITE);
-    doc.text(label, cx + 5, iy);
-  });
+    doc.text('Every dimension meets the bar — no blocking gaps.', MARGIN_L + INNER_PAD, iy);
+  }
   iy += 4;
 
   // Timeline
@@ -363,7 +369,7 @@ function drawDimensionCard(doc, y, dim, score, pageUsed) {
   } else {
     sans(doc, 8);
     color(doc, COLOR_TEXT_SEC);
-    doc.text('No critical gaps identified.', textX, cy);
+    doc.text(emptyStateText(score.status), textX, cy);
     cy += 4;
   }
 

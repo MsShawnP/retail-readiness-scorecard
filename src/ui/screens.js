@@ -13,6 +13,7 @@ import {
   DIMENSION_LABELS,
   getTopBlockers,
   getOverallVerdict,
+  emptyStateText,
 } from '../engine/scoring.js';
 import { buildBarChart } from './chart.js';
 
@@ -30,13 +31,15 @@ function esc(str) {
 
 // ─── Shared elements ─────────────────────────────────────────────────────────
 
+// Pass the raw subtitle — escaping happens here so callers can't forget it.
 function brandMark(subtitle = '') {
+  const safe = esc(subtitle);
   return `
     <div style="margin-bottom: 44px;">
       <div style="font-family: var(--serif); font-size: 13px; font-weight: 700;
                   color: var(--text-secondary); letter-spacing: 0.04em; text-transform: uppercase;
                   margin-bottom: ${subtitle ? '3px' : '0'};">Lailara</div>
-      ${subtitle ? `<div style="font-size: 13px; color: var(--text-secondary);">${subtitle}</div>` : ''}
+      ${safe ? `<div style="font-size: 13px; color: var(--text-secondary);">${safe}</div>` : ''}
     </div>
   `;
 }
@@ -48,8 +51,10 @@ export function renderIntro() {
     ${brandMark()}
     <h1 class="screen-title">Are you ready for the buyer's call?</h1>
     <p class="screen-subtitle">
-      A diagnostic for specialty food brands. Answer 12–18 questions and get a concrete
-      verdict — which requirements you meet, which you don't, and what to fix first.
+      A launch-readiness diagnostic for specialty food brands heading into Walmart, Costco,
+      or Whole Foods. Answer 12–18 questions and get a Red / Yellow / Green scorecard across
+      eight operational dimensions — plus a one-page PDF showing which launch requirements
+      you meet, which you don't, and what to fix first.
     </p>
     <div style="margin-bottom: 20px;">
       <button class="btn btn-primary" data-action="start">Start Assessment</button>
@@ -163,8 +168,8 @@ export function renderQuestion(question, flowState, retailer, brandName) {
   }).join('');
 
   const contextLine = brandName
-    ? `${esc(brandName)} · ${esc(retailerLabel)}`
-    : esc(retailerLabel);
+    ? `${brandName} · ${retailerLabel}`
+    : retailerLabel;
 
   return `
     ${brandMark(contextLine)}
@@ -186,15 +191,18 @@ export function renderQuestion(question, flowState, retailer, brandName) {
 
 const STATUS_LABELS = { red: 'Red', yellow: 'Yellow', green: 'Green' };
 
+// Absolute URLs — the scorecard is downloaded and opened as a local file, where
+// relative paths (/work/…) would resolve to file:// and 404.
+const LAILARA_BASE = 'https://lailarallc.com';
 const DIMENSION_ENGAGEMENTS = {
-  productData: { name: 'Product Data Health Audit', path: '/work/product-data-health-audit' },
-  syndication: { name: 'Product Data Health Audit', path: '/work/product-data-health-audit' },
-  edi:         { name: 'Retail Readiness & Launch', path: '/work/retail-readiness-launch' },
-  fulfillment: { name: 'Fulfillment & OTIF Diagnostic', path: '/work/fulfillment-otif' },
-  financial:   { name: 'Retail Readiness & Launch', path: '/work/retail-readiness-launch' },
-  production:  { name: 'Fulfillment & OTIF Diagnostic', path: '/work/fulfillment-otif' },
-  compliance:  { name: 'Retail Readiness & Launch', path: '/work/retail-readiness-launch' },
-  team:        { name: 'Trade Spend & Deduction Recovery', path: '/work/trade-spend-deduction-recovery' },
+  productData: { name: 'Product Data Health Audit', path: `${LAILARA_BASE}/work/product-data-health-audit` },
+  syndication: { name: 'Product Data Health Audit', path: `${LAILARA_BASE}/work/product-data-health-audit` },
+  edi:         { name: 'Retail Readiness & Launch', path: `${LAILARA_BASE}/work/retail-readiness-launch` },
+  fulfillment: { name: 'Fulfillment & OTIF Diagnostic', path: `${LAILARA_BASE}/work/fulfillment-otif` },
+  financial:   { name: 'Retail Readiness & Launch', path: `${LAILARA_BASE}/work/retail-readiness-launch` },
+  production:  { name: 'Fulfillment & OTIF Diagnostic', path: `${LAILARA_BASE}/work/fulfillment-otif` },
+  compliance:  { name: 'Retail Readiness & Launch', path: `${LAILARA_BASE}/work/retail-readiness-launch` },
+  team:        { name: 'Trade Spend & Deduction Recovery', path: `${LAILARA_BASE}/work/trade-spend-deduction-recovery` },
 };
 
 /**
@@ -212,8 +220,7 @@ export function renderResults(brandName, retailer, scores) {
   const blockerItems = topBlockers.map(dim => {
     const s = scores[dim];
     const label = DIMENSION_LABELS[dim] ?? dim;
-    const finding = s.findings?.[0]
-      ?? (s.status === 'green' ? 'No critical gaps identified.' : 'Review dimension detail below.');
+    const finding = s.findings?.[0] ?? emptyStateText(s.status);
     return `
       <li class="callout-card__blocker">
         <span class="blocker-chip ${s.status}" aria-hidden="true"></span>
@@ -225,16 +232,25 @@ export function renderResults(brandName, retailer, scores) {
     `;
   }).join('');
 
+  const prioritiesBlock = topBlockers.length > 0
+    ? `
+      <p class="callout-card__blockers-heading">Top Priorities</p>
+      <ul class="callout-card__blockers" aria-label="Top priorities">
+        ${blockerItems}
+      </ul>`
+    : `
+      <p class="callout-card__blockers-heading">Top Priorities</p>
+      <p class="callout-card__blocker-text" style="margin: 4px 0 0;">
+        Every dimension meets the bar — no blocking gaps identified.
+      </p>`;
+
   const calloutCard = `
     <div class="callout-card" role="region" aria-label="Overall verdict">
       <p class="callout-card__label">Lailara — Retail Readiness Scorecard</p>
       <p class="callout-card__verdict">${esc(verdict)}</p>
       <p class="callout-card__brand">${esc(brandName)} · ${esc(retailerLabel)}</p>
 
-      <p class="callout-card__blockers-heading">Top Priorities</p>
-      <ul class="callout-card__blockers" aria-label="Top priorities">
-        ${blockerItems}
-      </ul>
+      ${prioritiesBlock}
 
       <p class="callout-card__timeline">${esc(timeline)}</p>
     </div>
@@ -284,7 +300,7 @@ export function renderResults(brandName, retailer, scores) {
         </div>
         ${findingItems
           ? `<ul class="dimension-card__findings" aria-label="Findings">${findingItems}</ul>`
-          : `<p style="font-size:14px;color:var(--text-secondary);">No critical gaps identified.</p>`
+          : `<p style="font-size:14px;color:var(--text-secondary);">${esc(emptyStateText(s.status))}</p>`
         }
         ${s.fix && (s.findings?.length > 0 || s.status !== 'green')
           ? `<p class="dimension-card__fix">${esc(s.fix)}</p>`
@@ -325,7 +341,7 @@ export function renderResults(brandName, retailer, scores) {
           <span class="blocker-chip red" aria-hidden="true" style="flex-shrink: 0;"></span>
           <div>
             <strong style="color: var(--ink);">${esc(dimLabel)}</strong>
-            <a href="${item.path}" target="_top"
+            <a href="${item.path}" target="_blank" rel="noopener"
                style="display: block; font-size: 14px; color: var(--accent, #1f2e7a);
                       text-decoration: underline; margin-top: 2px;">
               ${esc(item.name)} &rarr;
@@ -352,7 +368,7 @@ export function renderResults(brandName, retailer, scores) {
           No Red dimensions — you're ahead of most brands at this stage. If you want a second
           opinion on the Yellows or help tightening the gaps before the buyer's call:
         </p>
-        <a href="/contact" target="_top"
+        <a href="${LAILARA_BASE}/contact" target="_blank" rel="noopener"
            style="display: inline-block; padding: 8px 20px; background: var(--accent, #1f2e7a);
                   color: #fff; font-size: 14px; font-weight: 600; text-decoration: none;
                   border-radius: 2px;">
@@ -372,7 +388,7 @@ export function renderResults(brandName, retailer, scores) {
   `;
 
   return `
-    ${brandMark(`${esc(retailerLabel)} Readiness — ${esc(brandName)}`)}
+    ${brandMark(`${retailerLabel} Readiness — ${brandName}`)}
     <div class="section-label">Assessment complete</div>
     <h1 class="screen-title">${esc(verdict)}</h1>
     ${calloutCard}
