@@ -1,0 +1,23 @@
+{
+  "retailer": "walmart",
+  "answers": {
+    "pd_gtin_valid": "yes",
+    "pd_hierarchy": "partial",
+    "pd_item360": "no",
+    "syn_gdsn_active": "yes",
+    "syn_coverage": "partial",
+    "edi_asn_capable": "yes",
+    "edi_asn_timing": "partial",
+    "edi_fsma204": "no",
+    "edi_label_compliant": "yes",
+    "ff_otif_rate": "partial",
+    "fin_cost_modeled": "yes",
+    "fin_cash_runway": "no",
+    "prod_capacity_confirmed": "yes",
+    "prod_lead_time": "yes",
+    "comp_fsma_pcqi": "yes",
+    "comp_allergens": "partial",
+    "team_owner": "yes",
+    "team_chargeback_process": "partial"
+  }
+}
