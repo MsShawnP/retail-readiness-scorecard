@@ -46,7 +46,7 @@ Development and tests:
 
 ```bash
 npm run dev     # Vite dev server with HMR at localhost:5173
-npm test        # Vitest — 37 unit tests covering scoring engine and flow engine
+npm test        # Vitest — 59 unit tests (scoring/flow engines + demo golden). Python: pytest scoring_engine/ (JS/Python parity lock + client mode)
 ```
 
 ## Tech stack
