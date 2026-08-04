@@ -1,7 +1,7 @@
 # Demo engagement config (safe to deploy: demo: true).
 # Real client runs use a private engagement.yml (gitignored). See INPUT-SPEC.md.
 client:
-  name: "Cinderhaven Foods (demo)"
+  name: "Cinderhaven Provisions (demo)"
   # logo: "client-data/logo.png"   # optional; embedded as an offline data URI
 engagement:
   id: "DEMO-SCORECARD-001"
