@@ -1,0 +1,63 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  js-tests:
+    name: JS engine + demo golden (vitest)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Server-side deploy guard: refuse if an active client engagement.yml is
+      # present. core.hooksPath is local git config and inert on a fresh clone,
+      # so the guard must also run here. No-op for demo/clean checkouts.
+      - name: Engagement guard
+        run: python3 scripts/engagement_guard.py
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Unit tests + demo golden
+        run: npm test
+
+  python-parity:
+    name: JS/Python parity gate (pytest)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Engagement guard
+        run: python3 scripts/engagement_guard.py
+
+      # The parity test runs the canonical JS engine (node) against the Python
+      # mirror, so both toolchains are required. score.py + parity_dump.mjs use
+      # only stdlib / node builtins — no npm ci, no extra Python deps.
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
+      - name: Install pytest
+        run: pip install pytest
+
+      - name: Run JS/Python parity lock
+        run: python -m pytest scoring_engine/ -v
